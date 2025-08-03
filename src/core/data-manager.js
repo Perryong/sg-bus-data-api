@@ -8,6 +8,10 @@ class DataManager {
     this.cache = new Map();
   }
 
+  checkVercelDeployment() {
+    return process.env.VERCEL === '1';
+  }
+
   ensureDirectory(filePath) {
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) {
@@ -22,7 +26,21 @@ class DataManager {
       }
 
       this.logger.info(`📖 Reading: ${filePath}`);
-      const content = fs.readFileSync(filePath, 'utf-8');
+      
+      // For Vercel deployments, try to read from both absolute and relative paths
+      let content;
+      if (this.checkVercelDeployment()) {
+        try {
+          // Try absolute path first
+          content = fs.readFileSync(path.resolve(filePath), 'utf-8');
+        } catch (error) {
+          // Fallback to relative path
+          content = fs.readFileSync(filePath, 'utf-8');
+        }
+      } else {
+        content = fs.readFileSync(filePath, 'utf-8');
+      }
+      
       const data = JSON.parse(content);
       
       this.cache.set(filePath, data);
@@ -72,6 +90,11 @@ class DataManager {
 
   list(directory, filter = null) {
     try {
+      if (!fs.existsSync(directory)) {
+        this.logger.warn(`Directory does not exist: ${directory}`);
+        return [];
+      }
+      
       const files = fs.readdirSync(directory, { withFileTypes: true });
       return files
         .filter(file => filter ? filter(file) : true)

@@ -33,6 +33,35 @@ async function handler(req, res) {
       totalSize += size;
     }
     
+    // Fallback for Vercel deployment when files might not be accessible
+    if (process.env.VERCEL === '1' && !allFilesExist) {
+      console.log('Using fallback status for Vercel deployment');
+      return send(res, 200, {
+        status: 'limited',
+        timestamp: new Date().toISOString(),
+        version: '2.0.0',
+        uptime: {
+          seconds: Math.floor(process.uptime()),
+          human: `${Math.floor(process.uptime() / 3600)}h ${Math.floor((process.uptime() % 3600) / 60)}m ${Math.floor(process.uptime() % 60)}s`
+        },
+        features: {
+          staticData: true,
+          realtimeData: !!process.env.DatamallAccountKey,
+          cors: true,
+          caching: true
+        },
+        environment: 'vercel',
+        endpoints: {
+          '/api/bus-stops': 'Static bus stops data',
+          '/api/bus-services': 'Static bus services data',
+          '/api/bus-routes': 'Static bus routes data',
+          '/api/realtime/arrivals': process.env.DatamallAccountKey ? 'Live arrivals' : 'Disabled (no API key)',
+          '/api/realtime/positions': process.env.DatamallAccountKey ? 'Live positions' : 'Disabled (no API key)'
+        },
+        message: 'Running in limited mode on Vercel. Some features may be restricted.'
+      });
+    }
+    
     // Test API key availability
     const hasApiKey = !!process.env.DatamallAccountKey;
     
@@ -55,7 +84,7 @@ async function handler(req, res) {
           totalSizeMB: Math.round(totalSize / 1024 / 1024 * 100) / 100
         }
       },
-      environment: process.env.NODE_ENV || 'development',
+      environment: process.env.VERCEL === '1' ? 'vercel' : (process.env.NODE_ENV || 'development'),
       features: {
         staticData: allFilesExist,
         realtimeData: hasApiKey,
