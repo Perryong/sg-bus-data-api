@@ -16,10 +16,5 @@
       "src": "/api/(.*)",
       "dest": "/api/$1"
     }
-  ],
-  "build": {
-    "env": {
-      "DatamallAccountKey": "@datamall-account-key"
-    }
-  }
+  ]
 }
