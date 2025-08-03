@@ -1,0 +1,44 @@
+{
+  "name": "sgbusdata",
+  "version": "2.0.0",
+  "description": "Singapore Bus data processing and API generation with Vercel deployment",
+  "main": "src/index.js",
+  "scripts": {
+    "cleanup": "del-cli data/v1/raw/services/* data/v1/patch/*.cm.json data/v1/patch/*.om.json",
+    "fetch": "node src/commands/fetch.js",
+    "patch": "node src/commands/patch.js", 
+    "generate": "node src/commands/generate.js",
+    "build": "npm run cleanup && npm run fetch && npm run patch && npm run generate",
+    "changes": "node src/commands/changes.js",
+    "dirlist": "node src/commands/dirlist.js",
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "vercel:dev": "vercel dev",
+    "vercel:build": "node scripts/build-data.js",
+    "vercel:deploy": "vercel --prod",
+    "api:test": "node api/index.js"
+  },
+  "dependencies": {
+    "@mapbox/polyline": "~1.1.1",
+    "@tmcw/togeojson": "~4.4.0", 
+    "@turf/helpers": "~6.3.0",
+    "del-cli": "~4.0.1",
+    "dotenv": "~10.0.0",
+    "fast-xml-parser": "~3.19.0",
+    "fastest-validator": "~1.10.1",
+    "form-data": "~4.0.0",
+    "got": "~11.8.3",
+    "he": "~1.2.0",
+    "hyperdiff": "~2.0.8",
+    "just-diff": "~3.1.1",
+    "simplify-js": "~1.2.4",
+    "sort-keys": "~4.2.0",
+    "xmldom": "~0.5.0",
+    "micro": "^9.3.4",
+    "micro-cors": "^0.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20",
+    "vercel": "^28.0.0"
+  }
+}

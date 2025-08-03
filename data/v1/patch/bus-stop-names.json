@@ -1,0 +1,162 @@
+[
+	{
+		"number": "04121",
+		"name": "SMU",
+		"newName": "SMU"
+	},
+	{
+		"number": "08041",
+		"name": "YMCA",
+		"newName": "YMCA"
+	},
+	{
+		"number": "15109",
+		"name": "LP 30",
+		"newName": "LP 30"
+	},
+	{
+		"number": "16149",
+		"name": "SDE3",
+		"newName": "SDE3"
+	},
+	{
+		"number": "18071",
+		"name": "NUH",
+		"newName": "NUH"
+	},
+	{
+		"number": "18221",
+		"name": "NUH",
+		"newName": "NUH"
+	},
+	{
+		"number": "19021",
+		"name": "SP SMA",
+		"newName": "SP SMA"
+	},
+	{
+		"number": "21349",
+		"name": "GSK",
+		"newName": "GSK"
+	},
+	{
+		"number": "24441",
+		"name": "GSK",
+		"newName": "GSK"
+	},
+	{
+		"number": "25541",
+		"name": "PEC",
+		"newName": "PEC"
+	},
+	{
+		"number": "25551",
+		"name": "GARMCO",
+		"newName": "GARMCO"
+	},
+	{
+		"number": "26209",
+		"name": "MSD",
+		"newName": "MSD"
+	},
+	{
+		"number": "27041",
+		"name": "NIE CP 7",
+		"newName": "NIE CP 7"
+	},
+	{
+		"number": "27241",
+		"name": "SPMS",
+		"newName": "SPMS"
+	},
+	{
+		"number": "40261",
+		"name": "LP 52",
+		"newName": "LP 52"
+	},
+	{
+		"number": "40269",
+		"name": "LP 57",
+		"newName": "LP 57"
+	},
+	{
+		"number": "43719",
+		"name": "MINDEF CP",
+		"newName": "MINDEF CP"
+	},
+	{
+		"number": "44891",
+		"name": "APSN",
+		"newName": "APSN"
+	},
+	{
+		"number": "46049",
+		"name": "GLOBALFOUNDRIES",
+		"newName": "GLOBALFOUNDRIES"
+	},
+	{
+		"number": "48031",
+		"name": "LP 162",
+		"newName": "LP 162"
+	},
+	{
+		"number": "48039",
+		"name": "LP 159",
+		"newName": "LP 159"
+	},
+	{
+		"number": "55289",
+		"name": "LP 94",
+		"newName": "LP 94"
+	},
+	{
+		"number": "64149",
+		"name": "LP 137",
+		"newName": "LP 137"
+	},
+	{
+		"number": "70089",
+		"name": "HDB CP",
+		"newName": "HDB CP"
+	},
+	{
+		"number": "75171",
+		"name": "UWCSEA",
+		"newName": "UWCSEA"
+	},
+	{
+		"number": "77401",
+		"name": "UMC",
+		"newName": "UMC"
+	},
+	{
+		"number": "80171",
+		"name": "CP F",
+		"newName": "CP F"
+	},
+	{
+		"number": "91111",
+		"name": "CP B1",
+		"newName": "CP B1"
+	},
+	{
+		"number": "93179",
+		"name": "CP D3",
+		"newName": "CP D3"
+	},
+	{
+		"number": "95179",
+		"name": "DHL",
+		"newName": "DHL"
+	},
+	{
+		"number": "96329",
+		"name": "DHL",
+		"newName": "DHL"
+	},
+	{
+		"number": "96449",
+		"name": "SUTD",
+		"newName": "SUTD"
+	}
+]
