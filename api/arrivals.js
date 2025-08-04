@@ -6,6 +6,8 @@ module.exports = async (req, res) => {
   try {
     const { busStopCode, serviceNo } = req.query;
     
+    console.log(`[DEBUG] Arrivals API request for busStopCode: ${busStopCode}, serviceNo: ${serviceNo}`);
+    
     // Validate parameters
     const busStopValidation = Validators.validateBusStopCode(busStopCode);
     if (!busStopValidation.valid) {
@@ -20,11 +22,16 @@ module.exports = async (req, res) => {
     // Initialize LTA service
     const ltaService = new LTAService();
     
+    // Log API key status
+    console.log(`[DEBUG] API Key configured: ${Boolean(process.env.DatamallAccountKey)}`);
+    
     // Get arrival data from LTA API
     const rawData = await ltaService.getBusArrivals(busStopCode, serviceNo);
     
     // Format the data
     const arrivals = ltaService.formatArrivalData(rawData);
+    
+    console.log(`[DEBUG] Successfully retrieved ${arrivals.length} arrivals`);
     
     // Return successful response
     return ResponseHandler.success(res, {
@@ -47,7 +54,8 @@ module.exports = async (req, res) => {
     
     if (error.message.includes('LTA API Error')) {
       return ResponseHandler.serviceUnavailable(res, 'Unable to fetch arrival data from LTA', {
-        suggestion: 'Try a different bus stop code such as 65011 (Sengkang Int) or 01012 (Dhoby Ghaut)'
+        suggestion: 'Try a different bus stop code such as 65011 (Sengkang Int) or 01012 (Dhoby Ghaut)',
+        error: error.message // Add more error details
       });
     }
     

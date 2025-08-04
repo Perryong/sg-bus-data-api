@@ -19,14 +19,23 @@ class LTAService {
   async getBusArrivals(busStopCode, serviceNo = null) {
     this.validateApiKey();
     
-    let endpoint = `/BusArrivalv2?BusStopCode=${busStopCode}`;
+    // Updated to v3 endpoint
+    let endpoint = `/v3/BusArrival?BusStopCode=${busStopCode}`;
     if (serviceNo) {
       endpoint += `&ServiceNo=${serviceNo}`;
     }
 
+    console.log(`[DEBUG] LTA API Request: ${endpoint}`);
+    
     const response = await this.client.get(endpoint);
     
+    console.log(`[DEBUG] LTA API Response status: ${response.status}, success: ${response.success}`);
+    
     if (!response.success) {
+      console.log(`[DEBUG] LTA API Error Details:`, JSON.stringify({
+        error: response.error,
+        status: response.status
+      }));
       throw new Error(`LTA API Error: ${response.error}`);
     }
 
@@ -36,14 +45,23 @@ class LTAService {
   async getBusLocations(serviceNo = null, skip = 0) {
     this.validateApiKey();
     
+    // This endpoint might also need updating if there's a v3 version
     let endpoint = `/BusLocationv2?$skip=${skip}`;
     if (serviceNo) {
       endpoint += `&ServiceNo=${serviceNo}`;
     }
 
+    console.log(`[DEBUG] LTA API Request: ${endpoint}`);
+    
     const response = await this.client.get(endpoint);
     
+    console.log(`[DEBUG] LTA API Response status: ${response.status}, success: ${response.success}`);
+    
     if (!response.success) {
+      console.log(`[DEBUG] LTA API Error Details:`, JSON.stringify({
+        error: response.error,
+        status: response.status
+      }));
       throw new Error(`LTA API Error: ${response.error}`);
     }
 
@@ -72,6 +90,10 @@ class LTAService {
             load: bus.Load,
             feature: bus.Feature,
             type: bus.Type,
+            monitored: bus.Monitored === 1, // Added new field
+            visitNumber: bus.VisitNumber,
+            originCode: bus.OriginCode,
+            destinationCode: bus.DestinationCode,
             latitude: parseFloat(bus.Latitude) || null,
             longitude: parseFloat(bus.Longitude) || null
           };
@@ -114,4 +136,4 @@ class LTAService {
   }
 }
 
-module.exports = LTAService; 
+module.exports = LTAService;
