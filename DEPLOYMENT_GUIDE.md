@@ -5,8 +5,9 @@
 ### **Current Status**: ✅ **Ready for Deployment**
 
 The API has been optimized to work within Vercel's Hobby plan limits:
-- **Function Count**: 11/12 (Under the limit)
-- **Optimizations**: Consolidated health check into main index
+- **Function Count**: 7/12 (Well under the limit)
+- **Optimizations**: Moved utility files to lib directory
+- **Import Paths**: All updated to use new structure
 
 ---
 
@@ -37,10 +38,10 @@ vercel --prod
 
 ## 🔧 **API Endpoints**
 
-### **Available Endpoints** (11 functions):
+### **Available Endpoints** (7 functions):
 
-1. **`/api`** - API information and health check
-2. **`/api/health`** - Health check (routed to index.js)
+1. **`/api`** - API information
+2. **`/api/health`** - Health check
 3. **`/api/bus-stops`** - Bus stop information
 4. **`/api/bus-services`** - Bus service information
 5. **`/api/bus-routes`** - Bus route information
@@ -48,8 +49,7 @@ vercel --prod
 7. **`/api/realtime`** - Real-time bus locations
 
 ### **Utility Files** (Not deployed as functions):
-- `api/utils/` - Shared utilities
-- `api/services/` - Service layer
+- `api/lib/` - Shared utilities and services
 
 ---
 
@@ -57,13 +57,14 @@ vercel --prod
 
 ### **Before Optimization**:
 - ❌ 13+ functions (over limit)
-- ❌ Separate health.js file
-- ❌ docs.js file
+- ❌ Utility files in api/ directory
+- ❌ Import path issues
 
 ### **After Optimization**:
-- ✅ 11 functions (under limit)
-- ✅ Health check integrated into index.js
-- ✅ Removed unnecessary files
+- ✅ 7 functions (well under limit)
+- ✅ Utility files moved to api/lib/
+- ✅ All import paths updated
+- ✅ All APIs tested and working
 
 ---
 
@@ -95,7 +96,7 @@ https://your-domain.vercel.app/api/arrivals?busStopCode=65011
 ## ⚠️ **Important Notes**
 
 ### **Hobby Plan Limits**:
-- ✅ **Function Count**: 12 (we're using 11)
+- ✅ **Function Count**: 12 (we're using 7)
 - ✅ **Bandwidth**: 100GB/month
 - ✅ **Build Time**: 100 minutes/month
 

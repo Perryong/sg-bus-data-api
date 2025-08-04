@@ -1,6 +1,6 @@
 // api/arrivals.js
-const { ResponseHandler, Validators } = require('./utils');
-const LTAService = require('./services/lta-service');
+const { ResponseHandler, Validators } = require('./lib');
+const LTAService = require('./lib/lta-service');
 
 module.exports = async (req, res) => {
   try {

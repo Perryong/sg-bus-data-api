@@ -1,4 +1,4 @@
-const { ResponseHandler, Validators } = require('./utils');
+const { ResponseHandler, Validators } = require('./lib');
 const { readFileSync } = require('fs');
 const path = require('path');
 

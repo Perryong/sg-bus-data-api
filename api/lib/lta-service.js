@@ -1,4 +1,4 @@
-const { HttpClient, ResponseHandler } = require('../utils');
+const { HttpClient, ResponseHandler } = require('./');
 
 class LTAService {
   constructor() {

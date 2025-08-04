@@ -1,4 +1,4 @@
-const { ResponseHandler } = require('./utils');
+const { ResponseHandler } = require('./lib');
 
 module.exports = async (req, res) => {
   try {
