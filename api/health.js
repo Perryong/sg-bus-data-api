@@ -16,4 +16,4 @@ module.exports = async (req, res) => {
     console.error('Health check error:', error);
     return ResponseHandler.internalError(res, 'Health check failed');
   }
-};
+}; 

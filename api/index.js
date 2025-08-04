@@ -44,8 +44,8 @@ module.exports = async (req, res) => {
           parameters: ["serviceNo", "skip"]
         }
       ],
-      documentation: "/api/docs",
-      source: "https://github.com/your-repo/sg-bus-data"
+      documentation: "https://github.com/Perryong/sg-bus-data-api",
+      source: "https://github.com/Perryong/sg-bus-data-api"
     };
 
     return ResponseHandler.success(res, apiInfo);

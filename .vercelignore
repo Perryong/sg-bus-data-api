@@ -1,0 +1,22 @@
+# Ignore utility directories - they should not be deployed as serverless functions
+api/utils/
+api/services/
+
+# Ignore test files
+test-*.js
+*.test.js
+*.spec.js
+
+# Ignore documentation
+*.md
+API_*.md
+DEPLOYMENT_*.md
+
+# Ignore development files
+.git/
+node_modules/
+.env
+.env.local
+.env.development
+.env.test
+.env.production 
