@@ -1,80 +1,56 @@
-const { send } = require('micro');
-const got = require('got');
+const { ResponseHandler, Validators } = require('./utils');
+const LTAService = require('./services/lta-service');
 
-const LTA_API_BASE = 'https://datamall2.mytransport.sg/ltaodataservice';
-const API_KEY = process.env.DatamallAccountKey;
-
-async function handler(req, res) {
-  const { query } = req;
-  const { serviceNo, skip = 0 } = query;
-  
-  if (!API_KEY) {
-    return send(res, 500, {
-      error: 'Configuration Error', 
-      message: 'DataMall API key not configured. Real-time features are disabled.',
-      suggestion: 'Please set the DatamallAccountKey environment variable.'
-    });
-  }
-
+module.exports = async (req, res) => {
   try {
-    let url = `${LTA_API_BASE}/BusLocationv2?$skip=${skip}`;
-    if (serviceNo) {
-      url += `&ServiceNo=${serviceNo}`;
+    const { serviceNo, skip } = req.query;
+    
+    // Validate parameters
+    const serviceValidation = Validators.validateServiceNo(serviceNo);
+    if (!serviceValidation.valid) {
+      return ResponseHandler.badRequest(res, serviceValidation.error);
     }
 
-    const response = await got(url, {
-      headers: {
-        AccountKey: API_KEY
-      },
-      responseType: 'json',
-      timeout: 15000
-    });
+    const skipValidation = Validators.validateSkip(skip);
+    if (!skipValidation.valid) {
+      return ResponseHandler.badRequest(res, skipValidation.error);
+    }
 
-    const positions = response.body.value.map(bus => ({
-      serviceNo: bus.ServiceNo,
-      busId: bus.BusId,
-      operator: bus.Operator,
-      coordinates: [parseFloat(bus.Longitude), parseFloat(bus.Latitude)],
-      bearing: parseFloat(bus.Bearing) || 0,
-      timestamp: bus.GPSTimestamp,
-      congestion: bus.CongestionLevel, // 0 = No congestion, 1 = Light, 2 = Moderate, 3 = Heavy
-      busType: bus.BusType // 'SD' = Single Deck, 'DD' = Double Deck, 'BD' = Bendy
-    })).filter(bus => 
-      // Filter out invalid coordinates
-      bus.coordinates[0] !== 0 && bus.coordinates[1] !== 0
-    );
-
-    return send(res, 200, {
-      positions,
-      timestamp: new Date().toISOString(),
+    // Initialize LTA service
+    const ltaService = new LTAService();
+    
+    // Get location data from LTA API
+    const rawData = await ltaService.getBusLocations(serviceNo, skipValidation.value);
+    
+    // Format the data
+    const positions = ltaService.formatLocationData(rawData);
+    
+    // Return successful response
+    return ResponseHandler.success(res, {
+      positions
+    }, {
       meta: {
         total: positions.length,
         serviceFilter: serviceNo || null,
-        skip: parseInt(skip),
+        skip: skipValidation.value,
         source: 'LTA DataMall BusLocationv2'
       }
     });
+
   } catch (error) {
     console.error('Realtime API Error:', error);
     
     // Handle specific error cases
-    if (error.response?.statusCode === 401) {
-      return send(res, 401, {
-        error: 'Unauthorized',
-        message: 'Invalid DataMall API key'
-      });
-    } else if (error.response?.statusCode === 429) {
-      return send(res, 429, {
-        error: 'Rate Limited',
-        message: 'Too many requests to DataMall API'
-      });
+    if (error.message.includes('DataMall API key not configured')) {
+      return ResponseHandler.internalError(res, 'DataMall API key not configured');
     }
     
-    return send(res, 500, {
-      error: 'Failed to fetch bus positions',
-      message: error.message
+    if (error.message.includes('LTA API Error')) {
+      return ResponseHandler.serviceUnavailable(res, 'Unable to fetch bus location data from LTA');
+    }
+    
+    return ResponseHandler.internalError(res, 'Failed to fetch bus positions', {
+      error: error.message
     });
   }
-}
-
-module.exports = handler;
+};

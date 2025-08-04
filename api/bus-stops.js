@@ -1,4 +1,4 @@
-const { send } = require('micro');
+const { ResponseHandler, Validators } = require('./utils');
 const { readFileSync } = require('fs');
 const path = require('path');
 
@@ -18,26 +18,32 @@ function loadData() {
   }
 }
 
-async function handler(req, res, format = 'json') {
-  loadData();
-  
-  const { query } = req;
-  const { 
-    bbox,           // bounding box filter: "lng1,lat1,lng2,lat2"
-    service,        // filter by service number
-    search,         // search by stop name
-    limit = 1000    // limit results
-  } = query;
-
+module.exports = async (req, res) => {
   try {
+    loadData();
+    
+    const { bbox, service, search, limit } = req.query;
+    const format = req.query.format || 'json';
+
+    // Validate parameters
+    const limitValidation = Validators.validateLimit(limit, 1000);
+    if (!limitValidation.valid) {
+      return ResponseHandler.badRequest(res, limitValidation.error);
+    }
+
+    const bboxValidation = Validators.validateBbox(bbox);
+    if (!bboxValidation.valid) {
+      return ResponseHandler.badRequest(res, bboxValidation.error);
+    }
+
     let data = format === 'geojson' ? stopsGeoJSON : stopsData;
     
     if (format === 'geojson') {
       let features = data.features;
       
       // Apply bounding box filter
-      if (bbox) {
-        const [minLng, minLat, maxLng, maxLat] = bbox.split(',').map(Number);
+      if (bboxValidation.value) {
+        const [minLng, minLat, maxLng, maxLat] = bboxValidation.value;
         features = features.filter(feature => {
           const [lng, lat] = feature.geometry.coordinates;
           return lng >= minLng && lng <= maxLng && lat >= minLat && lat <= maxLat;
@@ -61,43 +67,58 @@ async function handler(req, res, format = 'json') {
       }
       
       // Apply limit
-      features = features.slice(0, parseInt(limit));
+      features = features.slice(0, limitValidation.value);
       
-      return send(res, 200, {
+      return ResponseHandler.success(res, {
         ...data,
-        features,
+        features
+      }, {
         meta: {
           total: features.length,
           bbox,
           service,
           search,
-          limit: parseInt(limit)
+          limit: limitValidation.value
         }
       });
     } else {
-      // JSON format processing...
+      // JSON format processing
       let stops = Object.entries(data);
       
-      // Apply filters similar to GeoJSON format
-      // ... (filtering logic)
+      // Apply service filter
+      if (service) {
+        stops = stops.filter(([stopCode, stopData]) =>
+          stopData.services.includes(service)
+        );
+      }
       
-      return send(res, 200, {
-        stops: Object.fromEntries(stops),
+      // Apply search filter
+      if (search) {
+        const searchTerm = search.toLowerCase();
+        stops = stops.filter(([stopCode, stopData]) =>
+          stopData.name.toLowerCase().includes(searchTerm) ||
+          stopData.road.toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      // Apply limit
+      stops = stops.slice(0, limitValidation.value);
+      
+      return ResponseHandler.success(res, {
+        stops: Object.fromEntries(stops)
+      }, {
         meta: {
           total: stops.length,
-          bbox,
           service,
           search,
-          limit: parseInt(limit)
+          limit: limitValidation.value
         }
       });
     }
   } catch (error) {
-    return send(res, 500, {
-      error: 'Failed to fetch bus stops',
-      message: error.message
+    console.error('Bus stops API Error:', error);
+    return ResponseHandler.internalError(res, 'Failed to fetch bus stops', {
+      error: error.message
     });
   }
-}
-
-module.exports = handler;
+};

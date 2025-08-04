@@ -1,4 +1,4 @@
-const { send } = require('micro');
+const { ResponseHandler, Validators } = require('./utils');
 const { readFileSync } = require('fs');
 const path = require('path');
 
@@ -15,18 +15,18 @@ function loadData() {
   }
 }
 
-async function handler(req, res) {
-  loadData();
-  
-  const { query } = req;
-  const { 
-    search,         // search by service number or name
-    origin,         // filter services passing through origin stop
-    destination,    // filter services passing through destination stop
-    limit = 100
-  } = query;
-
+module.exports = async (req, res) => {
   try {
+    loadData();
+    
+    const { search, origin, destination, limit } = req.query;
+
+    // Validate parameters
+    const limitValidation = Validators.validateLimit(limit, 100);
+    if (!limitValidation.valid) {
+      return ResponseHandler.badRequest(res, limitValidation.error);
+    }
+
     let services = Object.entries(servicesData);
     
     // Apply search filter
@@ -53,25 +53,23 @@ async function handler(req, res) {
     }
     
     // Apply limit
-    services = services.slice(0, parseInt(limit));
+    services = services.slice(0, limitValidation.value);
     
-    return send(res, 200, {
-      services: Object.fromEntries(services),
+    return ResponseHandler.success(res, {
+      services: Object.fromEntries(services)
+    }, {
       meta: {
         total: services.length,
         search,
         origin,
         destination,
-        limit: parseInt(limit)
+        limit: limitValidation.value
       }
     });
   } catch (error) {
     console.error('Services API Error:', error);
-    return send(res, 500, {
-      error: 'Failed to fetch bus services',
-      message: error.message
+    return ResponseHandler.internalError(res, 'Failed to fetch bus services', {
+      error: error.message
     });
   }
-}
-
-module.exports = handler;
+};

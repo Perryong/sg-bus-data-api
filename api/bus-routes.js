@@ -1,4 +1,4 @@
-const { send } = require('micro');
+const { ResponseHandler, Validators } = require('./utils');
 const { readFileSync } = require('fs');
 const path = require('path');
 
@@ -17,17 +17,19 @@ function loadData() {
   }
 }
 
-async function handler(req, res, format = 'json') {
-  loadData();
-  
-  const { query } = req;
-  const { 
-    service,        // specific service number
-    bbox,           // bounding box filter
-    simplified = true // return simplified polylines
-  } = query;
-
+module.exports = async (req, res) => {
   try {
+    loadData();
+    
+    const { service, bbox, simplified = 'true' } = req.query;
+    const format = req.query.format || 'json';
+
+    // Validate parameters
+    const bboxValidation = Validators.validateBbox(bbox);
+    if (!bboxValidation.valid) {
+      return ResponseHandler.badRequest(res, bboxValidation.error);
+    }
+
     if (format === 'geojson') {
       let features = routesGeoJSON.features;
       
@@ -39,8 +41,8 @@ async function handler(req, res, format = 'json') {
       }
       
       // Apply bounding box filter
-      if (bbox) {
-        const [minLng, minLat, maxLng, maxLat] = bbox.split(',').map(Number);
+      if (bboxValidation.value) {
+        const [minLng, minLat, maxLng, maxLat] = bboxValidation.value;
         features = features.filter(feature => {
           const coords = feature.geometry.coordinates;
           return coords.some(([lng, lat]) => 
@@ -49,9 +51,10 @@ async function handler(req, res, format = 'json') {
         });
       }
       
-      return send(res, 200, {
+      return ResponseHandler.success(res, {
         type: 'FeatureCollection',
-        features,
+        features
+      }, {
         meta: {
           total: features.length,
           service,
@@ -71,8 +74,9 @@ async function handler(req, res, format = 'json') {
         }
       }
       
-      return send(res, 200, {
-        routes,
+      return ResponseHandler.success(res, {
+        routes
+      }, {
         meta: {
           total: Object.keys(routes).length,
           service,
@@ -83,11 +87,8 @@ async function handler(req, res, format = 'json') {
     }
   } catch (error) {
     console.error('Routes API Error:', error);
-    return send(res, 500, {
-      error: 'Failed to fetch bus routes',
-      message: error.message
+    return ResponseHandler.internalError(res, 'Failed to fetch bus routes', {
+      error: error.message
     });
   }
-}
-
-module.exports = handler;
+};
