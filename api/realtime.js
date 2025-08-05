@@ -25,13 +25,35 @@ module.exports = async (req, res) => {
     // Log API key status
     console.log(`[DEBUG] API Key configured: ${Boolean(process.env.DatamallAccountKey)}`);
     
-    // Get location data from LTA API
-    const rawData = await ltaService.getBusLocations(serviceNo, skipValidation.value);
+    let rawData;
+    let usedFallback = false;
+    
+    try {
+      // First try the primary method to get bus locations
+      rawData = await ltaService.getBusLocations(serviceNo, skipValidation.value);
+    } catch (locationError) {
+      console.error('[DEBUG] Primary location method failed:', locationError.message);
+      
+      // If the API call fails with 404, try the fallback method
+      if (locationError.message.includes('404')) {
+        console.log('[DEBUG] Attempting fallback method using bus arrivals data');
+        try {
+          rawData = await ltaService.getBusLocationsFromArrivals(serviceNo);
+          usedFallback = true;
+        } catch (fallbackError) {
+          console.error('[DEBUG] Fallback method failed:', fallbackError.message);
+          throw new Error(`BusLocationv2 API error: ${locationError.message}. Fallback also failed: ${fallbackError.message}`);
+        }
+      } else {
+        // If not a 404, rethrow the original error
+        throw locationError;
+      }
+    }
     
     // Format the data
     const positions = ltaService.formatLocationData(rawData);
     
-    console.log(`[DEBUG] Successfully retrieved ${positions.length} bus positions`);
+    console.log(`[DEBUG] Successfully retrieved ${positions.length} bus positions${usedFallback ? ' (using fallback method)' : ''}`);
     
     // Return successful response
     return ResponseHandler.success(res, {
@@ -41,7 +63,8 @@ module.exports = async (req, res) => {
         total: positions.length,
         serviceFilter: serviceNo || null,
         skip: skipValidation.value,
-        source: 'LTA DataMall BusLocationv2'
+        source: usedFallback ? 'Derived from BusArrival data' : 'LTA DataMall BusLocationv2',
+        note: usedFallback ? 'Using fallback method due to BusLocationv2 API unavailability' : undefined
       }
     });
 
@@ -53,9 +76,17 @@ module.exports = async (req, res) => {
       return ResponseHandler.internalError(res, 'DataMall API key not configured');
     }
     
+    if (error.message.includes('maintenance')) {
+      return ResponseHandler.serviceUnavailable(res, 'LTA API currently undergoing maintenance', {
+        suggestion: 'The API might be unavailable due to scheduled maintenance. Please try again later.',
+        error: error.message
+      });
+    }
+    
     if (error.message.includes('LTA API Error')) {
       return ResponseHandler.serviceUnavailable(res, 'Unable to fetch bus location data from LTA', {
-        error: error.message // Add more error details
+        suggestion: 'This might be due to a temporary issue with the LTA DataMall service or an API change. Try the bus arrival endpoint as an alternative.',
+        error: error.message
       });
     }
     
