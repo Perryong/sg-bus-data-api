@@ -2,7 +2,7 @@
 
 This guide provides detailed information on how to use the Singapore Bus Data API. The API offers real-time bus information, bus stops, routes, and services data for Singapore's public transportation system.
 
-**Base URL:** `https://sg-bus-api.vercel.app/api`
+**Base URL:** `https://sg-bus-data-api.vercel.app/api`
 
 ## Table of Contents
 
@@ -52,7 +52,7 @@ Get general information about the API.
 GET /
 ```
 
-Example: `https://sg-bus-api.vercel.app/api`
+Example: `https://sg-bus-data-api.vercel.app/api`
 
 Response:
 ```json
@@ -86,7 +86,7 @@ Check the API's health status.
 GET /health
 ```
 
-Example: `https://sg-bus-api.vercel.app/api/health`
+Example: `https://sg-bus-data-api.vercel.app/api/health`
 
 Response:
 ```json
@@ -124,7 +124,7 @@ Parameters:
 - `limit` (optional): Maximum number of results (default: 100, max: 1000)
 - `format` (optional): Response format, either "json" (default) or "geojson"
 
-Example: `https://sg-bus-api.vercel.app/api/bus-stops?search=sengkang&limit=5`
+Example: `https://sg-bus-data-api.vercel.app/api/bus-stops?search=sengkang&limit=5`
 
 Response (JSON format):
 ```json
@@ -152,7 +152,7 @@ Response (JSON format):
 }
 ```
 
-Example (GeoJSON format): `https://sg-bus-api.vercel.app/api/bus-stops?search=sengkang&limit=5&format=geojson`
+Example (GeoJSON format): `https://sg-bus-data-api.vercel.app/api/bus-stops?search=sengkang&limit=5&format=geojson`
 
 ### Bus Services
 
@@ -168,7 +168,7 @@ Parameters:
 - `destination` (optional): Filter by destination bus stop code (5-digit number)
 - `limit` (optional): Maximum number of results (default: 100, max: 100)
 
-Example: `https://sg-bus-api.vercel.app/api/bus-services?search=27`
+Example: `https://sg-bus-data-api.vercel.app/api/bus-services?search=27`
 
 Response:
 ```json
@@ -214,7 +214,7 @@ Parameters:
 - `simplified` (optional): Use simplified routes (default: "true")
 - `format` (optional): Response format, either "json" (default) or "geojson"
 
-Example: `https://sg-bus-api.vercel.app/api/bus-routes?service=27`
+Example: `https://sg-bus-data-api.vercel.app/api/bus-routes?service=27`
 
 Response (JSON format):
 ```json
@@ -244,7 +244,7 @@ Response (JSON format):
 }
 ```
 
-Example (GeoJSON format): `https://sg-bus-api.vercel.app/api/bus-routes?service=27&format=geojson`
+Example (GeoJSON format): `https://sg-bus-data-api.vercel.app/api/bus-routes?service=27&format=geojson`
 
 ### Real-time Arrivals
 
@@ -260,7 +260,7 @@ Parameters:
 - `busStopCode` (required): 5-digit bus stop code
 - `serviceNo` (optional): Filter by service number (1-3 alphanumeric characters, optionally followed by a letter)
 
-Example: `https://sg-bus-api.vercel.app/api/arrivals?busStopCode=65011`
+Example: `https://sg-bus-data-api.vercel.app/api/arrivals?busStopCode=65011`
 
 Response:
 ```json
@@ -312,7 +312,7 @@ Response:
 }
 ```
 
-Example with service filter: `https://sg-bus-api.vercel.app/api/arrivals?busStopCode=65011&serviceNo=27`
+Example with service filter: `https://sg-bus-data-api.vercel.app/api/arrivals?busStopCode=65011&serviceNo=27`
 
 ### Real-time Bus Locations
 
@@ -328,7 +328,7 @@ Parameters:
 - `serviceNo` (optional): Filter by service number (1-3 alphanumeric characters, optionally followed by a letter)
 - `skip` (optional): Number of records to skip (default: 0, must be non-negative integer)
 
-Example: `https://sg-bus-api.vercel.app/api/realtime?serviceNo=27`
+Example: `https://sg-bus-data-api.vercel.app/api/realtime?serviceNo=27`
 
 Response:
 ```json
@@ -446,12 +446,12 @@ To find bus stops near your location (e.g., in Sengkang):
 
 1. Search for bus stops:
    ```
-   https://sg-bus-api.vercel.app/api/bus-stops?search=sengkang&limit=10
+   https://sg-bus-data-api.vercel.app/api/bus-stops?search=sengkang&limit=10
    ```
 
 2. Get bus stops in a geographic area (using bounding box):
    ```
-   https://sg-bus-api.vercel.app/api/bus-stops?bbox=103.89,1.38,103.90,1.40&format=geojson
+   https://sg-bus-data-api.vercel.app/api/bus-stops?bbox=103.89,1.38,103.90,1.40&format=geojson
    ```
 
 ### Checking Bus Arrivals
@@ -460,12 +460,12 @@ To check bus arrivals:
 
 1. Get all arrivals at Sengkang Interchange:
    ```
-   https://sg-bus-api.vercel.app/api/arrivals?busStopCode=65011
+   https://sg-bus-data-api.vercel.app/api/arrivals?busStopCode=65011
    ```
 
 2. Check arrivals for a specific service:
    ```
-   https://sg-bus-api.vercel.app/api/arrivals?busStopCode=65011&serviceNo=27
+   https://sg-bus-data-api.vercel.app/api/arrivals?busStopCode=65011&serviceNo=27
    ```
 
 ### Getting Route Information
@@ -474,17 +474,17 @@ To get bus route information:
 
 1. Find service details:
    ```
-   https://sg-bus-api.vercel.app/api/bus-services?search=27
+   https://sg-bus-data-api.vercel.app/api/bus-services?search=27
    ```
 
 2. Get route polylines for mapping:
    ```
-   https://sg-bus-api.vercel.app/api/bus-routes?service=27&format=geojson
+   https://sg-bus-data-api.vercel.app/api/bus-routes?service=27&format=geojson
    ```
 
 3. Find services between two stops:
    ```
-   https://sg-bus-api.vercel.app/api/bus-services?origin=65011&destination=77009
+   https://sg-bus-data-api.vercel.app/api/bus-services?origin=65011&destination=77009
    ```
 
 ## Development and Deployment
@@ -519,4 +519,4 @@ The API is deployed on Vercel and automatically builds from the main branch. The
 
 ---
 
-For more information, visit the [project repository](https://github.com/Perryong/sg-bus-data-api) or check the API base endpoint at `https://sg-bus-api.vercel.app/api`.
+For more information, visit the [project repository](https://github.com/Perryong/sg-bus-data-api) or check the API base endpoint at `https://sg-bus-data-api.vercel.app/api`.
