@@ -1,85 +1,73 @@
+// api/lib/validators.js
 class Validators {
   static validateBusStopCode(busStopCode) {
     if (!busStopCode) {
-      return { valid: false, error: 'busStopCode parameter is required' };
+      return {
+        valid: false,
+        error: 'Bus stop code is required'
+      };
     }
     
-    if (typeof busStopCode !== 'string' || busStopCode.trim().length === 0) {
-      return { valid: false, error: 'busStopCode must be a non-empty string' };
+    // Bus stop code should be 5 digits
+    const busStopRegex = /^\d{5}$/;
+    if (!busStopRegex.test(busStopCode)) {
+      return {
+        valid: false,
+        error: 'Invalid bus stop code. It should be a 5-digit number'
+      };
     }
     
-    // Bus stop codes are typically 5 digits
-    if (!/^\d{5}$/.test(busStopCode)) {
-      return { valid: false, error: 'busStopCode must be a 5-digit number' };
-    }
-    
-    return { valid: true };
+    return {
+      valid: true,
+      value: busStopCode
+    };
   }
-
+  
   static validateServiceNo(serviceNo) {
     if (!serviceNo) {
-      return { valid: true }; // Optional parameter
+      return {
+        valid: true,
+        value: null
+      };
     }
     
-    if (typeof serviceNo !== 'string' || serviceNo.trim().length === 0) {
-      return { valid: false, error: 'serviceNo must be a non-empty string' };
+    // Service number validation (allow alphanumeric with some special chars)
+    const serviceRegex = /^[a-zA-Z0-9]{1,3}[a-zA-Z]?$/;
+    if (!serviceRegex.test(serviceNo)) {
+      return {
+        valid: false,
+        error: 'Invalid service number format'
+      };
     }
     
-    // Service numbers can be 1-4 digits, optionally with letters
-    if (!/^[0-9]{1,4}[A-Z]?$/.test(serviceNo.toUpperCase())) {
-      return { valid: false, error: 'serviceNo must be 1-4 digits optionally followed by a letter' };
-    }
-    
-    return { valid: true };
+    return {
+      valid: true,
+      value: serviceNo
+    };
   }
-
-  static validateLimit(limit, maxLimit = 1000) {
-    if (!limit) {
-      return { valid: true, value: 100 }; // Default limit
-    }
-    
-    const numLimit = parseInt(limit);
-    if (isNaN(numLimit) || numLimit < 1) {
-      return { valid: false, error: 'limit must be a positive number' };
-    }
-    
-    if (numLimit > maxLimit) {
-      return { valid: false, error: `limit cannot exceed ${maxLimit}` };
-    }
-    
-    return { valid: true, value: numLimit };
-  }
-
-  static validateBbox(bbox) {
-    if (!bbox) {
-      return { valid: true }; // Optional parameter
-    }
-    
-    const coords = bbox.split(',').map(Number);
-    if (coords.length !== 4 || coords.some(isNaN)) {
-      return { valid: false, error: 'bbox must be in format "lng1,lat1,lng2,lat2"' };
-    }
-    
-    const [minLng, minLat, maxLng, maxLat] = coords;
-    if (minLng >= maxLng || minLat >= maxLat) {
-      return { valid: false, error: 'bbox coordinates must form a valid bounding box' };
-    }
-    
-    return { valid: true, value: coords };
-  }
-
+  
   static validateSkip(skip) {
     if (!skip) {
-      return { valid: true, value: 0 }; // Default skip
+      return {
+        valid: true,
+        value: 0
+      };
     }
     
-    const numSkip = parseInt(skip);
-    if (isNaN(numSkip) || numSkip < 0) {
-      return { valid: false, error: 'skip must be a non-negative number' };
+    const skipNumber = parseInt(skip, 10);
+    
+    if (isNaN(skipNumber) || skipNumber < 0) {
+      return {
+        valid: false,
+        error: 'Skip parameter must be a non-negative integer'
+      };
     }
     
-    return { valid: true, value: numSkip };
+    return {
+      valid: true,
+      value: skipNumber
+    };
   }
 }
 
-module.exports = Validators; 
+module.exports = Validators;

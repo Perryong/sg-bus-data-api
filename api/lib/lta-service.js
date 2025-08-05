@@ -1,4 +1,5 @@
-const { HttpClient, ResponseHandler } = require('./');
+// api/lib/lta-service.js
+const { HttpClient } = require('./');
 
 class LTAService {
   constructor() {
@@ -19,7 +20,6 @@ class LTAService {
   async getBusArrivals(busStopCode, serviceNo = null) {
     this.validateApiKey();
     
-    // Updated to v3 endpoint
     let endpoint = `/v3/BusArrival?BusStopCode=${busStopCode}`;
     if (serviceNo) {
       endpoint += `&ServiceNo=${serviceNo}`;
@@ -45,7 +45,6 @@ class LTAService {
   async getBusLocations(serviceNo = null, skip = 0) {
     this.validateApiKey();
     
-    // This endpoint might also need updating if there's a v3 version
     let endpoint = `/BusLocationv2?$skip=${skip}`;
     if (serviceNo) {
       endpoint += `&ServiceNo=${serviceNo}`;
@@ -69,7 +68,7 @@ class LTAService {
   }
 
   formatArrivalData(rawData) {
-    if (!rawData.Services || !Array.isArray(rawData.Services)) {
+    if (!rawData || !rawData.Services || !Array.isArray(rawData.Services)) {
       return [];
     }
 
@@ -90,7 +89,7 @@ class LTAService {
             load: bus.Load,
             feature: bus.Feature,
             type: bus.Type,
-            monitored: bus.Monitored === 1, // Added new field
+            monitored: bus.Monitored === 1,
             visitNumber: bus.VisitNumber,
             originCode: bus.OriginCode,
             destinationCode: bus.DestinationCode,
@@ -116,7 +115,7 @@ class LTAService {
   }
 
   formatLocationData(rawData) {
-    if (!rawData.value || !Array.isArray(rawData.value)) {
+    if (!rawData || !rawData.value || !Array.isArray(rawData.value)) {
       return [];
     }
 

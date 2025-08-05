@@ -1,56 +1,57 @@
+// api/lib/response-handler.js
 class ResponseHandler {
-  static success(res, data, meta = {}) {
+  static success(res, data, options = {}) {
     const response = {
       success: true,
       data,
       timestamp: new Date().toISOString(),
-      ...meta
+      ...options
     };
     
     return res.status(200).json(response);
   }
-
-  static error(res, statusCode, message, details = {}) {
+  
+  static badRequest(res, message, options = {}) {
     const response = {
       success: false,
       error: {
-        code: statusCode,
-        message,
-        ...details
+        code: 400,
+        message
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      ...options
     };
     
-    return res.status(statusCode).json(response);
+    return res.status(400).json(response);
   }
-
-  static badRequest(res, message, details = {}) {
-    return this.error(res, 400, message, details);
+  
+  static internalError(res, message, options = {}) {
+    const response = {
+      success: false,
+      error: {
+        code: 500,
+        message
+      },
+      timestamp: new Date().toISOString(),
+      ...options
+    };
+    
+    return res.status(500).json(response);
   }
-
-  static unauthorized(res, message = 'Unauthorized', details = {}) {
-    return this.error(res, 401, message, details);
-  }
-
-  static forbidden(res, message = 'Forbidden', details = {}) {
-    return this.error(res, 403, message, details);
-  }
-
-  static notFound(res, message = 'Resource not found', details = {}) {
-    return this.error(res, 404, message, details);
-  }
-
-  static tooManyRequests(res, message = 'Rate limit exceeded', details = {}) {
-    return this.error(res, 429, message, details);
-  }
-
-  static internalError(res, message = 'Internal server error', details = {}) {
-    return this.error(res, 500, message, details);
-  }
-
-  static serviceUnavailable(res, message = 'Service temporarily unavailable', details = {}) {
-    return this.error(res, 503, message, details);
+  
+  static serviceUnavailable(res, message, options = {}) {
+    const response = {
+      success: false,
+      error: {
+        code: 503,
+        message
+      },
+      timestamp: new Date().toISOString(),
+      ...options
+    };
+    
+    return res.status(503).json(response);
   }
 }
 
-module.exports = ResponseHandler; 
+module.exports = ResponseHandler;

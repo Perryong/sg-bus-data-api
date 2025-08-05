@@ -1,3 +1,4 @@
+// api/lib/http-client.js
 const got = require('got');
 
 class HttpClient {
@@ -18,10 +19,12 @@ class HttpClient {
         ...this.defaultHeaders,
         ...options.headers
       },
+      responseType: 'json',
       ...options
     };
 
     try {
+      console.log(`[DEBUG] Making request to: ${url}`);
       const response = await got(url, config);
       return {
         success: true,
@@ -30,6 +33,7 @@ class HttpClient {
         headers: response.headers
       };
     } catch (error) {
+      console.error(`Request failed: ${url}`, error.message);
       return {
         success: false,
         error: error.message,
@@ -44,4 +48,4 @@ class HttpClient {
   }
 }
 
-module.exports = HttpClient; 
+module.exports = HttpClient;
