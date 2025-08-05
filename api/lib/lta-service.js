@@ -1,3 +1,4 @@
+// api/lib/lta-service.js
 const { HttpClient } = require('./');
 
 class LTAService {
@@ -18,18 +19,18 @@ class LTAService {
 
   async getBusArrivals(busStopCode, serviceNo = null) {
     this.validateApiKey();
-
+    
     let endpoint = `/v3/BusArrival?BusStopCode=${busStopCode}`;
     if (serviceNo) {
       endpoint += `&ServiceNo=${serviceNo}`;
     }
 
     console.log(`[DEBUG] LTA API Request: ${endpoint}`);
-
+    
     const response = await this.client.get(endpoint);
-
+    
     console.log(`[DEBUG] LTA API Response status: ${response.status}, success: ${response.success}`);
-
+    
     if (!response.success) {
       console.log(`[DEBUG] LTA API Error Details:`, JSON.stringify({
         error: response.error,
@@ -41,18 +42,18 @@ class LTAService {
     return response.data;
   }
 
-
   async getBusLocations(serviceNo = null, skip = 0) {
     this.validateApiKey();
-
+    
     let endpoint = `/BusLocationv2?$skip=${skip}`;
     if (serviceNo) {
       endpoint += `&ServiceNo=${serviceNo}`;
     }
 
     console.log(`[DEBUG] LTA API Request: ${endpoint}`);
+    
     const response = await this.client.get(endpoint);
-
+    
     console.log(`[DEBUG] LTA API Response status: ${response.status}, success: ${response.success}`);
     
     if (!response.success) {
@@ -62,6 +63,7 @@ class LTAService {
       }));
       throw new Error(`LTA API Error: ${response.error}`);
     }
+
     return response.data;
   }
 
@@ -72,15 +74,15 @@ class LTAService {
 
     return rawData.Services.map(service => {
       const { ServiceNo, Operator, NextBus, NextBus2, NextBus3 } = service;
-
+      
       const formatBus = (bus) => {
         if (!bus || !bus.EstimatedArrival) return null;
-
+        
         try {
           const arrivalTime = new Date(bus.EstimatedArrival);
           const now = new Date();
           const minutesAway = Math.max(0, Math.round((arrivalTime - now) / 60000));
-
+          
           return {
             estimatedArrival: bus.EstimatedArrival,
             minutesAway,
@@ -99,7 +101,7 @@ class LTAService {
           return null;
         }
       };
-
+      
       return {
         serviceNo: ServiceNo,
         operator: Operator,
@@ -132,3 +134,5 @@ class LTAService {
     );
   }
 }
+
+module.exports = LTAService;
