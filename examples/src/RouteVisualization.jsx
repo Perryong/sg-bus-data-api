@@ -12,7 +12,7 @@ L.Icon.Default.mergeOptions({
 
 function RouteVisualization({ 
   serviceNumber, 
-      apiBaseUrl = '',
+  apiBaseUrl = '',
   showStops = true,
   showPatternLabels = true 
 }) {
@@ -222,31 +222,41 @@ function RouteVisualization({
                   <small>Route pattern ${pattern + 1}</small>
                 </div>
               `);
-              
-              // Add pattern labels if enabled
-              if (showPatternLabels && feature.geometry.coordinates.length > 0) {
-                const midPoint = feature.geometry.coordinates[Math.floor(feature.geometry.coordinates.length / 2)];
-                L.marker([midPoint[1], midPoint[0]], {
-                  icon: L.divIcon({
-                    className: 'pattern-label',
-                    html: `<div style="
-                      background: ${routeStyle(feature).color};
-                      color: white;
-                      padding: 2px 6px;
-                      border-radius: 10px;
-                      font-size: 10px;
-                      font-weight: bold;
-                      border: 1px solid white;
-                      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-                    ">${pattern + 1}</div>`,
-                    iconSize: [20, 16],
-                    iconAnchor: [10, 8]
-                  })
-                }).addTo(layer._map);
-              }
             }}
           />
         )}
+        
+        {/* Pattern labels as separate markers */}
+        {showPatternLabels && routeData.features.map((feature, index) => {
+          if (feature.geometry.coordinates.length > 0) {
+            const midPoint = feature.geometry.coordinates[Math.floor(feature.geometry.coordinates.length / 2)];
+            const pattern = feature.properties.pattern;
+            const colors = ['#ff7800', '#00ff78', '#7800ff', '#ff0078', '#78ff00'];
+            
+            return (
+              <Marker
+                key={`pattern-${index}`}
+                position={[midPoint[1], midPoint[0]]}
+                icon={L.divIcon({
+                  className: 'pattern-label',
+                  html: `<div style="
+                    background: ${colors[pattern % colors.length]};
+                    color: white;
+                    padding: 2px 6px;
+                    border-radius: 10px;
+                    font-size: 10px;
+                    font-weight: bold;
+                    border: 1px solid white;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+                  ">${pattern + 1}</div>`,
+                  iconSize: [20, 16],
+                  iconAnchor: [10, 8]
+                })}
+              />
+            );
+          }
+          return null;
+        })}
         
         {/* Bus stops */}
         {showStops && busStops.map((stop, index) => (
