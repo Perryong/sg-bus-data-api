@@ -12,7 +12,7 @@ L.Icon.Default.mergeOptions({
 
 function RouteVisualization({ 
   serviceNumber, 
-  apiBaseUrl = 'https://your-app.vercel.app',
+      apiBaseUrl = '',
   showStops = true,
   showPatternLabels = true 
 }) {
@@ -31,12 +31,12 @@ function RouteVisualization({
       try {
         // Fetch route geometry and stops in parallel
         const promises = [
-          fetch(`${apiBaseUrl}/api/bus-routes/geojson?service=${serviceNumber}`)
+          fetch(`${apiBaseUrl}/api/bus-routes?service=${serviceNumber}&format=geojson`)
         ];
         
         if (showStops) {
           promises.push(
-            fetch(`${apiBaseUrl}/api/bus-stops/geojson?service=${serviceNumber}`)
+            fetch(`${apiBaseUrl}/api/bus-stops?service=${serviceNumber}&format=geojson`)
           );
         }
 
@@ -49,13 +49,23 @@ function RouteVisualization({
           }
         });
 
-        const [routeGeoJSON, stopsGeoJSON] = await Promise.all([
+        const [routeResponse, stopsResponse] = await Promise.all([
           responses[0].json(),
-          showStops ? responses[1].json() : Promise.resolve({ features: [] })
+          showStops ? responses[1].json() : Promise.resolve({ data: { features: [] } })
         ]);
 
-        setRouteData(routeGeoJSON);
-        setBusStops(stopsGeoJSON.features || []);
+        // Check for success and extract data
+        if (routeResponse.success && routeResponse.data) {
+          setRouteData(routeResponse.data);
+        } else {
+          throw new Error('Invalid route data response');
+        }
+
+        if (showStops && stopsResponse.success && stopsResponse.data.features) {
+          setBusStops(stopsResponse.data.features);
+        } else if (showStops) {
+          setBusStops([]);
+        }
       } catch (err) {
         setError(err.message);
         console.error('Failed to fetch route data:', err);

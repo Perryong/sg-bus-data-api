@@ -14,11 +14,15 @@ export function useBusArrivals(stopCode, refreshInterval = 30000) {
       setError(null);
       try {
         const response = await fetch(
-          `https://sg-bus-api.vercel.app/api/realtime/arrivals?busStopCode=${stopCode}`
+          `https://sg-bus-data-api.vercel.app/api/arrivals?busStopCode=${stopCode}`
         );
         if (!response.ok) throw new Error('Failed to fetch arrivals');
         const data = await response.json();
-        setArrivals(data.arrivals);
+        if (data.success && data.data.arrivals) {
+          setArrivals(data.data.arrivals);
+        } else {
+          throw new Error(data.error?.message || 'Invalid response format');
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -51,12 +55,17 @@ export function useNearbyStops(latitude, longitude, radius = 0.01) {
 
       try {
         const response = await fetch(
-          `https://sg-bus-api.vercel.app/api/bus-stops/geojson?bbox=${bbox}`
+          `https://sg-bus-data-api.vercel.app/api/bus-stops?bbox=${bbox}&format=geojson`
         );
         const data = await response.json();
-        setStops(data.features);
+        if (data.success && data.data.features) {
+          setStops(data.data.features);
+        } else {
+          setStops([]);
+        }
       } catch (error) {
         console.error('Failed to fetch nearby stops:', error);
+        setStops([]);
       } finally {
         setLoading(false);
       }
@@ -80,21 +89,26 @@ export function useBusRoute(serviceNumber) {
       setLoading(true);
       try {
         const [routeResponse, stopsResponse] = await Promise.all([
-          fetch(`https://sg-bus-api.vercel.app/api/bus-routes/geojson?service=${serviceNumber}`),
-          fetch(`https://sg-bus-api.vercel.app/api/bus-stops/geojson?service=${serviceNumber}`)
+          fetch(`https://sg-bus-data-api.vercel.app/api/bus-routes?service=${serviceNumber}&format=geojson`),
+          fetch(`https://sg-bus-data-api.vercel.app/api/bus-stops?service=${serviceNumber}&format=geojson`)
         ]);
 
-        const [routeGeoJSON, stopsGeoJSON] = await Promise.all([
+        const [routeData, stopsData] = await Promise.all([
           routeResponse.json(),
           stopsResponse.json()
         ]);
 
-        setRouteData({
-          routes: routeGeoJSON.features,
-          stops: stopsGeoJSON.features
-        });
+        if (routeData.success && stopsData.success) {
+          setRouteData({
+            routes: routeData.data.features || [],
+            stops: stopsData.data.features || []
+          });
+        } else {
+          setRouteData(null);
+        }
       } catch (error) {
         console.error('Failed to fetch route data:', error);
+        setRouteData(null);
       } finally {
         setLoading(false);
       }
@@ -104,4 +118,42 @@ export function useBusRoute(serviceNumber) {
   }, [serviceNumber]);
 
   return { routeData, loading };
+}
+
+// Custom hook for real-time bus positions
+export function useBusPositions(serviceNumber, refreshInterval = 30000) {
+  const [positions, setPositions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!serviceNumber) return;
+
+    const fetchPositions = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(
+          `https://sg-bus-data-api.vercel.app/api/realtime?serviceNo=${serviceNumber}`
+        );
+        if (!response.ok) throw new Error('Failed to fetch bus positions');
+        const data = await response.json();
+        if (data.success && data.data.positions) {
+          setPositions(data.data.positions);
+        } else {
+          throw new Error(data.error?.message || 'Invalid response format');
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPositions();
+    const interval = setInterval(fetchPositions, refreshInterval);
+    return () => clearInterval(interval);
+  }, [serviceNumber, refreshInterval]);
+
+  return { positions, loading, error };
 }

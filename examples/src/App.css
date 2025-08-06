@@ -1,0 +1,149 @@
+/* App.css */
+.App {
+  text-align: center;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  background: #f8f9fa;
+  padding: 20px;
+  border-bottom: 1px solid #dee2e6;
+  flex-shrink: 0;
+}
+
+header h1 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+nav {
+  margin-top: 10px;
+}
+
+nav button {
+  margin: 0 5px;
+  padding: 8px 16px;
+  border: 1px solid #007bff;
+  background: white;
+  color: #007bff;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+nav button.active {
+  background: #007bff;
+  color: white;
+}
+
+nav button:hover {
+  background: #0056b3;
+  color: white;
+}
+
+main {
+  flex: 1;
+  position: relative;
+}
+
+input[type="text"] {
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-left: 10px;
+  font-size: 14px;
+}
+
+label {
+  font-weight: bold;
+  color: #333;
+}
+
+/* Leaflet map container styling */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* Bus marker styling */
+.bus-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Bus stop marker styling */
+.bus-stop-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Popup styling */
+.leaflet-popup-content {
+  margin: 8px 12px;
+  font-size: 14px;
+}
+
+.leaflet-popup-content h3 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.leaflet-popup-content p {
+  margin: 4px 0;
+  color: #666;
+}
+
+.leaflet-popup-content h4 {
+  margin: 12px 0 6px 0;
+  color: #333;
+  font-size: 14px;
+}
+
+/* Loading and error states */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  font-size: 18px;
+  color: #666;
+}
+
+.error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #dc3545;
+  font-size: 16px;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Status indicators */
+.status-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.status-connected {
+  background: #28a745;
+}
+
+.status-connecting {
+  background: #ffc107;
+}
+
+.status-error {
+  background: #dc3545;
+}
+
+.status-idle {
+  background: #6c757d;
+} 

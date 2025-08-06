@@ -65,7 +65,7 @@ function AutoBounds({ positions, selectedBus }) {
 
 function BusTracker({ 
   serviceNumber, 
-  apiBaseUrl = 'https://your-app.vercel.app',
+      apiBaseUrl = '',
   refreshInterval = 30000,
   showCongestion = true,
   showRoute = false 
@@ -87,7 +87,7 @@ function BusTracker({
     
     try {
       const response = await fetch(
-        `${apiBaseUrl}/api/realtime/positions?serviceNo=${serviceNumber}`,
+        `${apiBaseUrl}/api/realtime?serviceNo=${serviceNumber}`,
         { 
           timeout: 10000,
           headers: {
@@ -99,15 +99,15 @@ function BusTracker({
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
-      setBusPositions(data.positions || []);
-      setLastUpdate(new Date());
-      setConnectionStatus('connected');
       
-      // Clear selected bus if it's no longer in the list
-      if (selectedBus && !data.positions.some(bus => bus.busId === selectedBus.busId)) {
-        setSelectedBus(null);
+      if (data.success && data.data.positions) {
+        setBusPositions(data.data.positions);
+        setLastUpdate(new Date());
+        setConnectionStatus('connected');
+      } else {
+        throw new Error(data.error?.message || 'Invalid response format');
       }
     } catch (err) {
       setError(err.message);
@@ -116,7 +116,7 @@ function BusTracker({
     } finally {
       setIsLoading(false);
     }
-  }, [serviceNumber, apiBaseUrl, selectedBus]);
+  }, [serviceNumber, apiBaseUrl]);
 
   useEffect(() => {
     fetchBusPositions();
