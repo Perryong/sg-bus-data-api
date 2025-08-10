@@ -39,6 +39,32 @@ class LTAService {
       throw new Error(`LTA API Error: ${response.error}`);
     }
 
+    // Log a sample of the response structure for debugging
+    if (response.data && response.data.Services && response.data.Services.length > 0) {
+      const sampleService = response.data.Services[0];
+      console.log(`[DEBUG] Sample service structure:`, {
+        serviceNo: sampleService.ServiceNo,
+        operator: sampleService.Operator,
+        nextBusFields: sampleService.NextBus ? Object.keys(sampleService.NextBus) : 'No NextBus data',
+        nextBus2Fields: sampleService.NextBus2 ? Object.keys(sampleService.NextBus2) : 'No NextBus2 data',
+        nextBus3Fields: sampleService.NextBus3 ? Object.keys(sampleService.NextBus3) : 'No NextBus3 data'
+      });
+      
+      // Log coordinate fields if they exist
+      if (sampleService.NextBus) {
+        const coordFields = ['Latitude', 'Longitude', 'Lat', 'Lng', 'latitude', 'longitude'];
+        const foundCoords = coordFields.filter(field => sampleService.NextBus.hasOwnProperty(field));
+        if (foundCoords.length > 0) {
+          console.log(`[DEBUG] Found coordinate fields:`, foundCoords);
+          foundCoords.forEach(field => {
+            console.log(`[DEBUG] ${field}:`, sampleService.NextBus[field]);
+          });
+        } else {
+          console.log(`[DEBUG] No coordinate fields found in NextBus data`);
+        }
+      }
+    }
+
     return response.data;
   }
 
@@ -83,6 +109,45 @@ class LTAService {
           const now = new Date();
           const minutesAway = Math.max(0, Math.round((arrivalTime - now) / 60000));
           
+          // Enhanced coordinate parsing with multiple field name variations
+          const getCoordinate = (obj, latField, lngField) => {
+            const lat = obj[latField];
+            const lng = obj[lngField];
+            
+            // Try to parse as float, handle various formats
+            const parsedLat = lat !== undefined && lat !== null && lat !== '' ? parseFloat(lat) : null;
+            const parsedLng = lng !== undefined && lng !== null && lng !== '' ? parseFloat(lng) : null;
+            
+            // Validate coordinates are within reasonable bounds
+            if (parsedLat !== null && (parsedLat < -90 || parsedLat > 90)) {
+              console.log(`[DEBUG] Invalid latitude value: ${lat} (parsed: ${parsedLat})`);
+              return { latitude: null, longitude: null };
+            }
+            
+            if (parsedLng !== null && (parsedLng < -180 || parsedLng > 180)) {
+              console.log(`[DEBUG] Invalid longitude value: ${lng} (parsed: ${parsedLng})`);
+              return { latitude: null, longitude: null };
+            }
+            
+            return { latitude: parsedLat, longitude: parsedLng };
+          };
+          
+          // Try multiple possible field name variations
+          let coordinates = getCoordinate(bus, 'Latitude', 'Longitude');
+          if (coordinates.latitude === null && coordinates.longitude === null) {
+            coordinates = getCoordinate(bus, 'Lat', 'Lng');
+          }
+          if (coordinates.latitude === null && coordinates.longitude === null) {
+            coordinates = getCoordinate(bus, 'latitude', 'longitude');
+          }
+          
+          // Log coordinate availability for debugging
+          if (coordinates.latitude !== null || coordinates.longitude !== null) {
+            console.log(`[DEBUG] Found coordinates for bus: ${coordinates.latitude}, ${coordinates.longitude}`);
+          } else {
+            console.log(`[DEBUG] No coordinates found for bus. Available fields:`, Object.keys(bus));
+          }
+          
           return {
             estimatedArrival: bus.EstimatedArrival,
             minutesAway,
@@ -93,8 +158,8 @@ class LTAService {
             visitNumber: bus.VisitNumber,
             originCode: bus.OriginCode,
             destinationCode: bus.DestinationCode,
-            latitude: parseFloat(bus.Latitude) || null,
-            longitude: parseFloat(bus.Longitude) || null
+            latitude: coordinates.latitude,
+            longitude: coordinates.longitude
           };
         } catch (e) {
           console.error('Error formatting bus data:', e);
