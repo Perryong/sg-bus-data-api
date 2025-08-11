@@ -220,7 +220,7 @@
         .map-overlay {
             position: absolute;
             top: 1rem;
-            left: 1rem;
+            right: 1rem;
             z-index: 1000;
             display: flex;
             gap: 0.5rem;
@@ -449,7 +449,85 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Custom Scrollbar */
+        /* API Endpoints Section */
+        .api-endpoints-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .dynamic-endpoints {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .endpoint-section {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-secondary);
+            border-radius: 8px;
+            padding: 1rem;
+            transition: var(--transition);
+        }
+
+        .endpoint-section:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-primary);
+        }
+
+        .endpoint-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .endpoint-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .endpoint-input {
+            font-size: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            min-width: 0;
+        }
+
+        .endpoint-select {
+            font-size: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            min-width: 0;
+            cursor: pointer;
+        }
+
+        .endpoint-btn {
+            font-size: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--gradient-accent);
+            color: var(--bg-primary);
+        }
+
+        .quick-examples {
+            border-top: 1px solid var(--border-secondary);
+            padding-top: 1rem;
+        }
+
+        .quick-examples .endpoint-title {
+            margin-bottom: 0.5rem;
+        }
+
+        .quick-examples .links-list {
+            gap: 0.25rem;
+        }
+
+        .quick-examples .links-list li {
+            background: var(--bg-secondary);
+            padding: 0.5rem;
+        }
         .sidebar::-webkit-scrollbar,
         .arrivals-list::-webkit-scrollbar {
             width: 6px;
@@ -578,7 +656,7 @@
 
             .map-overlay {
                 top: 0.5rem;
-                left: 0.5rem;
+                right: 0.5rem;
             }
         }
 
@@ -699,23 +777,70 @@
                         <div class="section-icon">🔗</div>
                         API Endpoints
                     </div>
-                    <ul class="links-list">
-                        <li><a href="/api" target="_blank">/api</a></li>
-                        <li>
-                            <a href="/api/health" target="_blank">/api/health</a>
-                            <div class="health-status">
-                                <button id="checkHealth" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.5rem;">
-                                    Check Status
-                                </button>
-                                <div class="status-indicator" id="healthIndicator"></div>
-                                <span id="healthStatus" style="font-size: 0.75rem; color: var(--text-muted);">Unknown</span>
+                    <div class="api-endpoints-container">
+                        <ul class="links-list">
+                            <li><a href="/api" target="_blank">/api</a></li>
+                            <li>
+                                <a href="/api/health" target="_blank">/api/health</a>
+                                <div class="health-status">
+                                    <button id="checkHealth" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.5rem;">
+                                        Check Status
+                                    </button>
+                                    <div class="status-indicator" id="healthIndicator"></div>
+                                    <span id="healthStatus" style="font-size: 0.75rem; color: var(--text-muted);">Unknown</span>
+                                </div>
+                            </li>
+                        </ul>
+                        
+                        <div class="dynamic-endpoints">
+                            <div class="endpoint-section">
+                                <h4 class="endpoint-title">🚏 Bus Stops</h4>
+                                <div class="endpoint-controls">
+                                    <input id="apiStopsSearch" class="input-field endpoint-input" type="text" placeholder="Search term (e.g., sengkang)" />
+                                    <button id="openStopsApi" class="btn btn-secondary endpoint-btn">Open API</button>
+                                </div>
                             </div>
-                        </li>
-                        <li><a href="/api/bus-stops?search=sengkang&limit=10" target="_blank">Bus Stops (Sengkang)</a></li>
-                        <li><a href="/api/bus-services?search=27" target="_blank">Service 27</a></li>
-                        <li><a href="/api/bus-routes?service=27&format=geojson" target="_blank">Route 27 (GeoJSON)</a></li>
-                        <li><a href="/api/arrivals?busStopCode=65011" target="_blank">Arrivals (Sengkang Int)</a></li>
-                    </ul>
+                            
+                            <div class="endpoint-section">
+                                <h4 class="endpoint-title">🚌 Bus Services</h4>
+                                <div class="endpoint-controls">
+                                    <input id="apiServiceSearch" class="input-field endpoint-input" type="text" placeholder="Service number (e.g., 27)" />
+                                    <button id="openServiceApi" class="btn btn-secondary endpoint-btn">Open API</button>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint-section">
+                                <h4 class="endpoint-title">🗺️ Bus Routes</h4>
+                                <div class="endpoint-controls">
+                                    <input id="apiRouteService" class="input-field endpoint-input" type="text" placeholder="Service number (e.g., 27)" />
+                                    <select id="apiRouteFormat" class="input-field endpoint-select">
+                                        <option value="json">JSON</option>
+                                        <option value="geojson">GeoJSON</option>
+                                    </select>
+                                    <button id="openRouteApi" class="btn btn-secondary endpoint-btn">Open API</button>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint-section">
+                                <h4 class="endpoint-title">⏰ Arrivals</h4>
+                                <div class="endpoint-controls">
+                                    <input id="apiArrivalStop" class="input-field endpoint-input" type="text" placeholder="Stop code (e.g., 65011)" />
+                                    <input id="apiArrivalService" class="input-field endpoint-input" type="text" placeholder="Service (optional)" />
+                                    <button id="openArrivalApi" class="btn btn-secondary endpoint-btn">Open API</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="quick-examples">
+                            <h4 class="endpoint-title">⚡ Quick Examples</h4>
+                            <ul class="links-list">
+                                <li><a href="/api/bus-stops?search=sengkang&limit=10" target="_blank">Sengkang Stops</a></li>
+                                <li><a href="/api/bus-services?search=27" target="_blank">Service 27 Info</a></li>
+                                <li><a href="/api/bus-routes?service=133&format=geojson" target="_blank">Route 133 (GeoJSON)</a></li>
+                                <li><a href="/api/arrivals?busStopCode=65011" target="_blank">Sengkang Int Arrivals</a></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="section slide-in">
@@ -1004,7 +1129,127 @@
             }
         });
 
-        // Health check
+        // Dynamic API endpoint functions
+        function buildApiUrl(endpoint, params) {
+            const url = new URL(endpoint, window.location.origin);
+            Object.entries(params).forEach(([key, value]) => {
+                if (value && value.trim()) {
+                    url.searchParams.set(key, value.trim());
+                }
+            });
+            return url.toString();
+        }
+
+        // API endpoint event listeners
+        $("openStopsApi").addEventListener('click', () => {
+            const search = $("apiStopsSearch").value;
+            const url = buildApiUrl('/api/bus-stops', {
+                search: search,
+                limit: '10',
+                format: 'geojson'
+            });
+            window.open(url, '_blank');
+            showNotification(`Opening bus stops API${search ? ` for "${search}"` : ''}`, 'info');
+        });
+
+        $("openServiceApi").addEventListener('click', () => {
+            const search = $("apiServiceSearch").value;
+            const url = buildApiUrl('/api/bus-services', {
+                search: search
+            });
+            window.open(url, '_blank');
+            showNotification(`Opening bus services API${search ? ` for service "${search}"` : ''}`, 'info');
+        });
+
+        $("openRouteApi").addEventListener('click', () => {
+            const service = $("apiRouteService").value;
+            const format = $("apiRouteFormat").value;
+            
+            if (!service || !service.trim()) {
+                showNotification('Please enter a service number for routes', 'error');
+                $("apiRouteService").focus();
+                return;
+            }
+            
+            const url = buildApiUrl('/api/bus-routes', {
+                service: service,
+                format: format
+            });
+            window.open(url, '_blank');
+            showNotification(`Opening route API for service "${service}" in ${format.toUpperCase()} format`, 'info');
+        });
+
+        $("openArrivalApi").addEventListener('click', () => {
+            const stopCode = $("apiArrivalStop").value;
+            const service = $("apiArrivalService").value;
+            
+            if (!stopCode || !stopCode.trim()) {
+                showNotification('Please enter a bus stop code for arrivals', 'error');
+                $("apiArrivalStop").focus();
+                return;
+            }
+            
+            const url = buildApiUrl('/api/arrivals', {
+                busStopCode: stopCode,
+                serviceNo: service
+            });
+            window.open(url, '_blank');
+            showNotification(`Opening arrivals API for stop "${stopCode}"${service ? ` and service "${service}"` : ''}`, 'info');
+        });
+
+        // Sync main controls with API endpoint inputs
+        function syncInputs() {
+            const mainSearch = $("search").value;
+            const mainService = $("service").value;
+            const mainArrStop = $("arrStop").value;
+            const mainArrService = $("arrService").value;
+            
+            // Sync from main controls to API inputs
+            if (mainSearch && !$("apiStopsSearch").value) {
+                $("apiStopsSearch").value = mainSearch;
+            }
+            if (mainService && !$("apiServiceSearch").value) {
+                $("apiServiceSearch").value = mainService;
+            }
+            if (mainService && !$("apiRouteService").value) {
+                $("apiRouteService").value = mainService;
+            }
+            if (mainArrStop && !$("apiArrivalStop").value) {
+                $("apiArrivalStop").value = mainArrStop;
+            }
+            if (mainArrService && !$("apiArrivalService").value) {
+                $("apiArrivalService").value = mainArrService;
+            }
+        }
+
+        // Add sync listeners to main controls
+        [$("search"), $("service"), $("arrStop"), $("arrService")].forEach(input => {
+            input.addEventListener('input', syncInputs);
+        });
+
+        // Enhanced keyboard shortcuts for API endpoints
+        document.addEventListener('keydown', (e) => {
+            if (e.altKey) {
+                switch (e.key) {
+                    case '1':
+                        e.preventDefault();
+                        $("openStopsApi").click();
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        $("openServiceApi").click();
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        $("openRouteApi").click();
+                        break;
+                    case '4':
+                        e.preventDefault();
+                        $("openArrivalApi").click();
+                        break;
+                }
+            }
+        });
         $("checkHealth").addEventListener('click', async () => {
             const status = $("healthStatus");
             const indicator = $("healthIndicator");
@@ -1116,7 +1361,34 @@
             $("search").placeholder = "Try 'Sengkang' or 'Orchard'";
             $("service").placeholder = "Try '27' or '133'";
             $("arrStop").placeholder = "Try '65011' (Sengkang Int)";
+            
+            // Set some example values for API endpoints
+            $("apiStopsSearch").placeholder = "sengkang, orchard, etc.";
+            $("apiServiceSearch").placeholder = "27, 133, 190, etc.";
+            $("apiRouteService").placeholder = "27, 133, 190, etc.";
+            $("apiArrivalStop").placeholder = "65011, 01012, etc.";
+            $("apiArrivalService").placeholder = "27, 133 (optional)";
+            
+            // Initial sync
+            syncInputs();
         });
+
+        // Add tooltip functionality for keyboard shortcuts
+        function addTooltips() {
+            const tooltips = [
+                { element: $("openStopsApi"), text: "Alt+1: Open Stops API" },
+                { element: $("openServiceApi"), text: "Alt+2: Open Services API" },
+                { element: $("openRouteApi"), text: "Alt+3: Open Routes API" },
+                { element: $("openArrivalApi"), text: "Alt+4: Open Arrivals API" }
+            ];
+            
+            tooltips.forEach(({ element, text }) => {
+                element.title = text;
+            });
+        }
+
+        // Call addTooltips after DOM is loaded
+        document.addEventListener('DOMContentLoaded', addTooltips);
 
         // Add custom CSS animations for notifications
         const style = document.createElement('style');
