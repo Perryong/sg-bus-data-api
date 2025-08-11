@@ -22,6 +22,22 @@
       <div id="map"></div>
       <aside id="panel">
         <div class="section">
+          <h3>API endpoints</h3>
+          <ul>
+            <li><a target="_blank" href="/api">/api</a></li>
+            <li>
+              <a target="_blank" href="/api/health">/api/health</a>
+              <button id="checkHealth" style="margin-left:8px">Check</button>
+              <span id="healthStatus" style="margin-left:8px;color:#9ca3af"></span>
+            </li>
+            <li><a target="_blank" href="/api/bus-stops?search=sengkang&limit=10">/api/bus-stops?search=sengkang&limit=10</a></li>
+            <li><a target="_blank" href="/api/bus-stops?search=sengkang&limit=10&format=geojson">/api/bus-stops?search=sengkang&limit=10&format=geojson</a></li>
+            <li><a target="_blank" href="/api/bus-services?search=27">/api/bus-services?search=27</a></li>
+            <li><a target="_blank" href="/api/bus-routes?service=27&format=geojson">/api/bus-routes?service=27&format=geojson</a></li>
+            <li><a target="_blank" href="/api/arrivals?busStopCode=65011">/api/arrivals?busStopCode=65011</a></li>
+          </ul>
+        </div>
+        <div class="section">
           <h3>Arrivals</h3>
           <div class="row">
             <input id="arrStop" type="text" placeholder="Bus stop code (e.g., 65011)" />

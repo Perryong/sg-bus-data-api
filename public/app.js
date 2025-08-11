@@ -102,4 +102,19 @@ $("fetchArrivals").addEventListener('click', async () => {
   }
 });
 
+// Health check button
+document.getElementById('checkHealth').addEventListener('click', async () => {
+  const status = document.getElementById('healthStatus');
+  status.textContent = 'Checking...';
+  try {
+    const res = await fetch('/api/health');
+    const json = await res.json();
+    status.textContent = json?.data?.status || 'Unknown';
+    status.style.color = res.ok ? '#10b981' : '#ef4444';
+  } catch (e) {
+    status.textContent = 'Error';
+    status.style.color = '#ef4444';
+  }
+});
+
 
