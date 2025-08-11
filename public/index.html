@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SG Bus Data Explorer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <link rel="stylesheet" href="/public/style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>SG Bus Data Explorer</h1>
+      <div class="controls">
+        <input id="search" type="text" placeholder="Search stops (name/road)" />
+        <input id="service" type="text" placeholder="Service (e.g., 27)" />
+        <button id="loadStops">Load Stops</button>
+        <button id="loadRoutes">Load Routes</button>
+        <button id="clear">Clear</button>
+      </div>
+    </header>
+    <main>
+      <div id="map"></div>
+      <aside id="panel">
+        <div class="section">
+          <h3>Arrivals</h3>
+          <div class="row">
+            <input id="arrStop" type="text" placeholder="Bus stop code (e.g., 65011)" />
+            <input id="arrService" type="text" placeholder="Service (optional)" />
+            <button id="fetchArrivals">Fetch</button>
+          </div>
+          <ul id="arrivals"></ul>
+        </div>
+        <div class="section">
+          <h3>Dataset quick links</h3>
+          <ul>
+            <li><a target="_blank" href="/api/data?name=stops.min.geojson">stops.min.geojson</a></li>
+            <li><a target="_blank" href="/api/data?name=routes.min.geojson">routes.min.geojson</a></li>
+            <li><a target="_blank" href="/api/data?name=services.min">services.min.json</a></li>
+            <li><a target="_blank" href="/api/data?name=firstlast.min">firstlast.min.json</a></li>
+          </ul>
+        </div>
+      </aside>
+    </main>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="/public/app.js"></script>
+  </body>
+  </html>
+
+
