@@ -9,10 +9,15 @@ let stopsGeoJSON = null;
 function loadData() {
   if (!stopsData) {
     try {
-      stopsData = JSON.parse(readFileSync(path.join(__dirname, '../data/v1/stops.min.json'), 'utf8'));
-      stopsGeoJSON = JSON.parse(readFileSync(path.join(__dirname, '../data/v1/stops.min.geojson'), 'utf8'));
+      // Load from stops.json instead of stops.min.json
+      stopsData = JSON.parse(readFileSync(path.join(__dirname, '../data/v1/stops.json'), 'utf8'));
+      stopsGeoJSON = JSON.parse(readFileSync(path.join(__dirname, '../data/v1/stops.geojson'), 'utf8'));
+      console.log('Successfully loaded bus stops data');
+      console.log(`Loaded ${Object.keys(stopsData).length} bus stops from stops.json`);
+      console.log(`Loaded ${stopsGeoJSON.features.length} bus stops from stops.geojson`);
     } catch (error) {
       console.error('Failed to load stops data:', error);
+      console.error('Attempted to load from:', path.join(__dirname, '../data/v1/stops.json'));
       throw new Error('Bus stops data not available');
     }
   }
@@ -24,6 +29,8 @@ module.exports = async (req, res) => {
     
     const { bbox, service, search, limit } = req.query;
     const format = req.query.format || 'json';
+
+    console.log(`[DEBUG] Bus stops API request - format: ${format}, search: ${search}, service: ${service}, limit: ${limit}`);
 
     // Validate parameters
     const limitValidation = Validators.validateLimit(limit, 1000);
@@ -40,6 +47,7 @@ module.exports = async (req, res) => {
     
     if (format === 'geojson') {
       let features = data.features;
+      console.log(`[DEBUG] Starting with ${features.length} GeoJSON features`);
       
       // Apply bounding box filter
       if (bboxValidation.value) {
@@ -48,77 +56,119 @@ module.exports = async (req, res) => {
           const [lng, lat] = feature.geometry.coordinates;
           return lng >= minLng && lng <= maxLng && lat >= minLat && lat <= maxLat;
         });
+        console.log(`[DEBUG] After bbox filter: ${features.length} features`);
       }
       
       // Apply service filter
       if (service) {
         features = features.filter(feature => 
+          feature.properties.services && 
+          Array.isArray(feature.properties.services) && 
           feature.properties.services.includes(service)
         );
+        console.log(`[DEBUG] After service filter (${service}): ${features.length} features`);
       }
       
       // Apply search filter
       if (search) {
         const searchTerm = search.toLowerCase();
-        features = features.filter(feature =>
-          feature.properties.name.toLowerCase().includes(searchTerm) ||
-          feature.properties.road.toLowerCase().includes(searchTerm)
-        );
+        features = features.filter(feature => {
+          const props = feature.properties;
+          return (props.name && props.name.toLowerCase().includes(searchTerm)) ||
+                 (props.road && props.road.toLowerCase().includes(searchTerm)) ||
+                 (props.code && props.code.toLowerCase().includes(searchTerm));
+        });
+        console.log(`[DEBUG] After search filter (${searchTerm}): ${features.length} features`);
       }
       
       // Apply limit
+      const originalCount = features.length;
       features = features.slice(0, limitValidation.value);
+      console.log(`[DEBUG] After limit (${limitValidation.value}): ${features.length} features (from ${originalCount})`);
       
       return ResponseHandler.success(res, {
-        ...data,
+        type: data.type,
         features
       }, {
         meta: {
           total: features.length,
+          totalBeforeLimit: originalCount,
           bbox,
           service,
           search,
-          limit: limitValidation.value
+          limit: limitValidation.value,
+          format: 'geojson'
         }
       });
     } else {
       // JSON format processing
       let stops = Object.entries(data);
+      console.log(`[DEBUG] Starting with ${stops.length} JSON stops`);
       
       // Apply service filter
       if (service) {
         stops = stops.filter(([stopCode, stopData]) =>
+          stopData.services && 
+          Array.isArray(stopData.services) && 
           stopData.services.includes(service)
         );
+        console.log(`[DEBUG] After service filter (${service}): ${stops.length} stops`);
       }
       
       // Apply search filter
       if (search) {
         const searchTerm = search.toLowerCase();
         stops = stops.filter(([stopCode, stopData]) =>
-          stopData.name.toLowerCase().includes(searchTerm) ||
-          stopData.road.toLowerCase().includes(searchTerm)
+          (stopData.name && stopData.name.toLowerCase().includes(searchTerm)) ||
+          (stopData.road && stopData.road.toLowerCase().includes(searchTerm)) ||
+          stopCode.toLowerCase().includes(searchTerm)
         );
+        console.log(`[DEBUG] After search filter (${searchTerm}): ${stops.length} stops`);
+      }
+      
+      // Apply bounding box filter for JSON format
+      if (bboxValidation.value) {
+        const [minLng, minLat, maxLng, maxLat] = bboxValidation.value;
+        stops = stops.filter(([stopCode, stopData]) => {
+          if (stopData.coordinates && Array.isArray(stopData.coordinates) && stopData.coordinates.length >= 2) {
+            const [lng, lat] = stopData.coordinates;
+            return lng >= minLng && lng <= maxLng && lat >= minLat && lat <= maxLat;
+          }
+          // If coordinates are stored differently, try lat/lng properties
+          if (stopData.lat !== undefined && stopData.lng !== undefined) {
+            const lat = parseFloat(stopData.lat);
+            const lng = parseFloat(stopData.lng);
+            return lng >= minLng && lng <= maxLng && lat >= minLat && lat <= maxLat;
+          }
+          return false;
+        });
+        console.log(`[DEBUG] After bbox filter: ${stops.length} stops`);
       }
       
       // Apply limit
+      const originalCount = stops.length;
       stops = stops.slice(0, limitValidation.value);
+      console.log(`[DEBUG] After limit (${limitValidation.value}): ${stops.length} stops (from ${originalCount})`);
       
       return ResponseHandler.success(res, {
         stops: Object.fromEntries(stops)
       }, {
         meta: {
           total: stops.length,
+          totalBeforeLimit: originalCount,
           service,
           search,
-          limit: limitValidation.value
+          limit: limitValidation.value,
+          format: 'json'
         }
       });
     }
   } catch (error) {
     console.error('Bus stops API Error:', error);
+    console.error('Error stack:', error.stack);
     return ResponseHandler.internalError(res, 'Failed to fetch bus stops', {
-      error: error.message
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
