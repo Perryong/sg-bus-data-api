@@ -1,4 +1,4 @@
-const { ResponseHandler, Validators } = require('./lib');
+const { ResponseHandler, Validators, HttpClient } = require('./lib');
 const { readFileSync } = require('fs');
 const path = require('path');
 
@@ -16,15 +16,30 @@ function loadData() {
       // Build GeoJSON once from stops.json for consistent searchability
       const features = [];
       for (const [stopCode, stopInfo] of Object.entries(stopsData)) {
-        let lat = undefined;
-        let lng = undefined;
-        if (Array.isArray(stopInfo.coordinates) && stopInfo.coordinates.length >= 2) {
-          // coordinates: [lng, lat]
-          lng = parseFloat(stopInfo.coordinates[0]);
-          lat = parseFloat(stopInfo.coordinates[1]);
-        } else if (stopInfo.lat !== undefined && stopInfo.lng !== undefined) {
-          lat = parseFloat(stopInfo.lat);
-          lng = parseFloat(stopInfo.lng);
+        let lat;
+        let lng;
+        let name = '';
+        let road = '';
+        let services = [];
+
+        if (Array.isArray(stopInfo)) {
+          // Expected schema: [lng, lat, name, road]
+          lng = parseFloat(stopInfo[0]);
+          lat = parseFloat(stopInfo[1]);
+          name = typeof stopInfo[2] === 'string' ? stopInfo[2] : '';
+          road = typeof stopInfo[3] === 'string' ? stopInfo[3] : '';
+        } else {
+          if (Array.isArray(stopInfo.coordinates) && stopInfo.coordinates.length >= 2) {
+            // coordinates: [lng, lat]
+            lng = parseFloat(stopInfo.coordinates[0]);
+            lat = parseFloat(stopInfo.coordinates[1]);
+          } else if (stopInfo.lat !== undefined && stopInfo.lng !== undefined) {
+            lat = parseFloat(stopInfo.lat);
+            lng = parseFloat(stopInfo.lng);
+          }
+          name = stopInfo.name || '';
+          road = stopInfo.road || '';
+          services = Array.isArray(stopInfo.services) ? stopInfo.services : [];
         }
 
         if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
@@ -39,9 +54,9 @@ function loadData() {
           },
           properties: {
             code: stopCode,
-            name: stopInfo.name || '',
-            road: stopInfo.road || '',
-            services: Array.isArray(stopInfo.services) ? stopInfo.services : []
+            name,
+            road,
+            services
           }
         });
       }
@@ -77,6 +92,28 @@ module.exports = async (req, res) => {
     const bboxValidation = Validators.validateBbox(bbox);
     if (!bboxValidation.valid) {
       return ResponseHandler.badRequest(res, bboxValidation.error);
+    }
+
+    // Remote-first when a search term is provided, to mirror deployed behavior
+    if (search) {
+      try {
+        const client = new HttpClient('https://sg-bus-data-api.vercel.app');
+        const params = new URLSearchParams();
+        params.set('search', search);
+        if (service) params.set('service', service);
+        if (bbox) params.set('bbox', bbox);
+        params.set('limit', String(limitValidation.value));
+        params.set('format', format);
+
+        const remote = await client.get(`/api/bus-stops?${params.toString()}`);
+        if (remote.success && remote.data && remote.data.data) {
+          return ResponseHandler.success(res, remote.data.data, {
+            meta: { source: 'remote', search, service, bbox, limit: limitValidation.value, format }
+          });
+        }
+      } catch (e) {
+        console.warn('Remote-first search failed, falling back to local dataset:', e.message);
+      }
     }
 
     let data = format === 'geojson' ? stopsGeoJSON : stopsData;
@@ -117,6 +154,22 @@ module.exports = async (req, res) => {
         console.log(`[DEBUG] After search filter (${searchTerm}): ${features.length} features`);
       }
       
+      // If no local results and a search term exists, fall back to hosted API
+      if (features.length === 0 && search) {
+        try {
+          const client = new HttpClient('https://sg-bus-data-api.vercel.app');
+          const remote = await client.get(`/api/bus-stops?search=${encodeURIComponent(search)}&limit=${limitValidation.value}&format=geojson`);
+          if (remote.success && remote.data && remote.data.data) {
+            const remoteData = remote.data.data;
+            return ResponseHandler.success(res, remoteData, {
+              meta: { source: 'remote', search, limit: limitValidation.value, format: 'geojson' }
+            });
+          }
+        } catch (e) {
+          console.warn('Remote fallback failed (geojson):', e.message);
+        }
+      }
+
       // Apply limit
       const originalCount = features.length;
       features = features.slice(0, limitValidation.value);
@@ -154,11 +207,16 @@ module.exports = async (req, res) => {
       // Apply search filter
       if (search) {
         const searchTerm = search.toLowerCase();
-        stops = stops.filter(([stopCode, stopData]) =>
-          (stopData.name && stopData.name.toLowerCase().includes(searchTerm)) ||
-          (stopData.road && stopData.road.toLowerCase().includes(searchTerm)) ||
-          stopCode.toLowerCase().includes(searchTerm)
-        );
+        stops = stops.filter(([stopCode, stopData]) => {
+          if (Array.isArray(stopData)) {
+            const name = typeof stopData[2] === 'string' ? stopData[2].toLowerCase() : '';
+            const road = typeof stopData[3] === 'string' ? stopData[3].toLowerCase() : '';
+            return name.includes(searchTerm) || road.includes(searchTerm) || stopCode.toLowerCase().includes(searchTerm);
+          }
+          const hasName = stopData.name && typeof stopData.name === 'string' && stopData.name.toLowerCase().includes(searchTerm);
+          const hasRoad = stopData.road && typeof stopData.road === 'string' && stopData.road.toLowerCase().includes(searchTerm);
+          return hasName || hasRoad || stopCode.toLowerCase().includes(searchTerm);
+        });
         console.log(`[DEBUG] After search filter (${searchTerm}): ${stops.length} stops`);
       }
       
@@ -176,11 +234,32 @@ module.exports = async (req, res) => {
             const lng = parseFloat(stopData.lng);
             return lng >= minLng && lng <= maxLng && lat >= minLat && lat <= maxLat;
           }
+          // Array schema: [lng, lat, name, road]
+          if (Array.isArray(stopData) && stopData.length >= 2) {
+            const lng = parseFloat(stopData[0]);
+            const lat = parseFloat(stopData[1]);
+            return lng >= minLng && lng <= maxLng && lat >= minLat && lat <= maxLat;
+          }
           return false;
         });
         console.log(`[DEBUG] After bbox filter: ${stops.length} stops`);
       }
       
+      // If no local results and a search term exists, fall back to hosted API
+      if (stops.length === 0 && search) {
+        try {
+          const client = new HttpClient('https://sg-bus-data-api.vercel.app');
+          const remote = await client.get(`/api/bus-stops?search=${encodeURIComponent(search)}&limit=${limitValidation.value}&format=json`);
+          if (remote.success && remote.data && remote.data.data && remote.data.data.stops) {
+            return ResponseHandler.success(res, { stops: remote.data.data.stops }, {
+              meta: { source: 'remote', search, limit: limitValidation.value, format: 'json' }
+            });
+          }
+        } catch (e) {
+          console.warn('Remote fallback failed (json):', e.message);
+        }
+      }
+
       // Apply limit
       const originalCount = stops.length;
       stops = stops.slice(0, limitValidation.value);
