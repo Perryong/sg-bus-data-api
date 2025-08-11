@@ -48,6 +48,9 @@ module.exports = async (req, res) => {
             "/api/data?name=routes.min",
             "/api/data?name=routes.min.geojson",
             "/api/data?name=services.min",
+            "/api/data?name=stops.json",
+            "/api/data?name=services.json",
+            "/api/data?name=firstlast.json",
             "/api/data?name=firstlast.min"
           ]
         }
