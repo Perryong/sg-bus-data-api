@@ -117,4 +117,84 @@ document.getElementById('checkHealth').addEventListener('click', async () => {
   }
 });
 
+// Map overlay actions
+const overlayCenterBtn = document.getElementById('centerMap');
+const overlayFullscreenBtn = document.getElementById('toggleFullscreen');
+if (overlayCenterBtn) {
+  overlayCenterBtn.addEventListener('click', () => {
+    map.setView([1.3521, 103.8198], 12);
+  });
+}
+if (overlayFullscreenBtn) {
+  overlayFullscreenBtn.addEventListener('click', () => {
+    const mapEl = document.getElementById('map');
+    if (!document.fullscreenElement) {
+      (mapEl.requestFullscreen || mapEl.webkitRequestFullscreen || mapEl.msRequestFullscreen || (()=>{})).call(mapEl);
+      setTimeout(() => map.invalidateSize(), 100);
+    } else {
+      (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen || (()=>{})).call(document);
+      setTimeout(() => map.invalidateSize(), 100);
+    }
+  });
+}
+
+// API helpers
+function openUrl(url) {
+  try { window.open(url, '_blank'); } catch (_) {}
+}
+
+const apiStopsSearch = document.getElementById('apiStopsSearch');
+const openStopsApi = document.getElementById('openStopsApi');
+if (openStopsApi) {
+  openStopsApi.addEventListener('click', () => {
+    const q = (apiStopsSearch?.value || '').trim();
+    const params = new URLSearchParams();
+    if (q) params.set('search', q);
+    params.set('limit', '10');
+    params.set('format', 'geojson');
+    openUrl(`/api/bus-stops?${params.toString()}`);
+  });
+}
+
+const apiServiceSearch = document.getElementById('apiServiceSearch');
+const openServiceApi = document.getElementById('openServiceApi');
+if (openServiceApi) {
+  openServiceApi.addEventListener('click', () => {
+    const q = (apiServiceSearch?.value || '').trim();
+    const params = new URLSearchParams();
+    if (q) params.set('search', q);
+    openUrl(`/api/bus-services?${params.toString()}`);
+  });
+}
+
+const apiRouteService = document.getElementById('apiRouteService');
+const apiRouteFormat = document.getElementById('apiRouteFormat');
+const openRouteApi = document.getElementById('openRouteApi');
+if (openRouteApi) {
+  openRouteApi.addEventListener('click', () => {
+    const svc = (apiRouteService?.value || '').trim();
+    const fmt = (apiRouteFormat?.value || 'json').trim();
+    if (!svc) { alert('Enter a service number'); return; }
+    const params = new URLSearchParams();
+    params.set('service', svc);
+    params.set('format', fmt);
+    openUrl(`/api/bus-routes?${params.toString()}`);
+  });
+}
+
+const apiArrivalStop = document.getElementById('apiArrivalStop');
+const apiArrivalService = document.getElementById('apiArrivalService');
+const openArrivalApi = document.getElementById('openArrivalApi');
+if (openArrivalApi) {
+  openArrivalApi.addEventListener('click', () => {
+    const stop = (apiArrivalStop?.value || '').trim();
+    const svc = (apiArrivalService?.value || '').trim();
+    if (!stop) { alert('Enter a stop code'); return; }
+    const params = new URLSearchParams();
+    params.set('busStopCode', stop);
+    if (svc) params.set('serviceNo', svc);
+    openUrl(`/api/arrivals?${params.toString()}`);
+  });
+}
+
 
