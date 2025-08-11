@@ -15,7 +15,6 @@ This guide provides detailed information on how to use the Singapore Bus Data AP
   - [Bus Services](#bus-services)
   - [Bus Routes](#bus-routes)
   - [Real-time Arrivals](#real-time-arrivals)
-  - [Real-time Bus Locations](#real-time-bus-locations)
 - [Response Format](#response-format)
 - [Error Handling](#error-handling)
 - [Examples](#examples)
@@ -28,14 +27,14 @@ This guide provides detailed information on how to use the Singapore Bus Data AP
 The Singapore Bus API provides access to:
 
 - Static data (bus stops, services, routes)
-- Real-time data (bus arrivals, bus locations)
+- Real-time data (bus arrivals)
 
 Data is returned in JSON format with consistent response structures.
 
 ## Authentication
 
 **Real-time endpoints require authentication:**
-- The `/arrivals` and `/realtime` endpoints require a valid LTA DataMall API key
+- The `/arrivals` endpoint requires a valid LTA DataMall API key
 - The API key must be configured as an environment variable `DatamallAccountKey`
 - Without a valid API key, these endpoints will return a 500 error with "DataMall API key not configured"
 
@@ -314,50 +313,7 @@ Response:
 
 Example with service filter: `https://sg-bus-data-api.vercel.app/api/arrivals?busStopCode=65011&serviceNo=27`
 
-### Real-time Bus Locations
 
-Get real-time bus location information.
-
-**⚠️ Requires DataMall API key**
-
-```
-GET /realtime
-```
-
-Parameters:
-- `serviceNo` (optional): Filter by service number (1-3 alphanumeric characters, optionally followed by a letter)
-- `skip` (optional): Number of records to skip (default: 0, must be non-negative integer)
-
-Example: `https://sg-bus-data-api.vercel.app/api/realtime?serviceNo=27`
-
-Response:
-```json
-{
-  "success": true,
-  "data": {
-    "positions": [
-      {
-        "serviceNo": "27",
-        "busId": "10234",
-        "operator": "SBST",
-        "coordinates": [103.8956742, 1.3925627],
-        "bearing": 45.2,
-        "timestamp": "2025-08-05T08:34:22+08:00",
-        "congestion": "Low",
-        "busType": "SD"
-      },
-      ...
-    ]
-  },
-  "timestamp": "2025-08-05T08:35:00.123Z",
-  "meta": {
-    "total": 15,
-    "serviceFilter": "27",
-    "skip": 0,
-    "source": "LTA DataMall BusLocationv2"
-  }
-}
-```
 
 ## Response Format
 

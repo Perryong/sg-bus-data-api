@@ -38,10 +38,18 @@ module.exports = async (req, res) => {
           parameters: ["busStopCode", "serviceNo"]
         },
         {
-          path: "/api/realtime",
+          path: "/api/data",
           method: "GET",
-          description: "Get real-time bus locations",
-          parameters: ["serviceNo", "skip"]
+          description: "Serve pre-generated datasets",
+          parameters: ["name"],
+          examples: [
+            "/api/data?name=stops.min",
+            "/api/data?name=stops.min.geojson",
+            "/api/data?name=routes.min",
+            "/api/data?name=routes.min.geojson",
+            "/api/data?name=services.min",
+            "/api/data?name=firstlast.min"
+          ]
         }
       ],
       documentation: "https://github.com/Perryong/sg-bus-data-api",
