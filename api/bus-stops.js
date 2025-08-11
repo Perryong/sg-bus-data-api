@@ -9,12 +9,48 @@ let stopsGeoJSON = null;
 function loadData() {
   if (!stopsData) {
     try {
-      // Load from stops.json instead of stops.min.json
-      stopsData = JSON.parse(readFileSync(path.join(__dirname, '../data/v1/stops.json'), 'utf8'));
-      stopsGeoJSON = JSON.parse(readFileSync(path.join(__dirname, '../data/v1/stops.geojson'), 'utf8'));
+      // Always source from the canonical JSON dataset
+      const raw = readFileSync(path.join(__dirname, '../data/v1/stops.json'), 'utf8');
+      stopsData = JSON.parse(raw);
+
+      // Build GeoJSON once from stops.json for consistent searchability
+      const features = [];
+      for (const [stopCode, stopInfo] of Object.entries(stopsData)) {
+        let lat = undefined;
+        let lng = undefined;
+        if (Array.isArray(stopInfo.coordinates) && stopInfo.coordinates.length >= 2) {
+          // coordinates: [lng, lat]
+          lng = parseFloat(stopInfo.coordinates[0]);
+          lat = parseFloat(stopInfo.coordinates[1]);
+        } else if (stopInfo.lat !== undefined && stopInfo.lng !== undefined) {
+          lat = parseFloat(stopInfo.lat);
+          lng = parseFloat(stopInfo.lng);
+        }
+
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+          continue;
+        }
+
+        features.push({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [lng, lat]
+          },
+          properties: {
+            code: stopCode,
+            name: stopInfo.name || '',
+            road: stopInfo.road || '',
+            services: Array.isArray(stopInfo.services) ? stopInfo.services : []
+          }
+        });
+      }
+
+      stopsGeoJSON = { type: 'FeatureCollection', features };
+
       console.log('Successfully loaded bus stops data');
       console.log(`Loaded ${Object.keys(stopsData).length} bus stops from stops.json`);
-      console.log(`Loaded ${stopsGeoJSON.features.length} bus stops from stops.geojson`);
+      console.log(`Constructed ${stopsGeoJSON.features.length} GeoJSON features from stops.json`);
     } catch (error) {
       console.error('Failed to load stops data:', error);
       console.error('Attempted to load from:', path.join(__dirname, '../data/v1/stops.json'));
